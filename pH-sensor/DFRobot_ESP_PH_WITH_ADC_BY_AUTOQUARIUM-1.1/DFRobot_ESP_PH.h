@@ -35,6 +35,7 @@ public:
     float readPH(float voltage, float temperature); // voltage to pH value, with temperature compensation
     void begin();            	//initialization
 	float get_neutralVoltage();
+	void manualCalibration(float voltage7, float voltage4); //manually input 2-point calibration values
 
 private:
     float _phValue;

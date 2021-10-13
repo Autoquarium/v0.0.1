@@ -70,7 +70,7 @@ void DFRobot_ESP_PH::begin()
 
 float DFRobot_ESP_PH::readPH(float voltage, float temperature)
 {
-    // Serial.print("_neutraVoltage:");
+    // Serial.print("_neutralVoltage:");
     // Serial.print(this->_neutralVoltage);
     // Serial.print(", _acidVoltage:");
     // Serial.print(this->_acidVoltage);
@@ -230,10 +230,14 @@ void DFRobot_ESP_PH::phCalibration(byte mode)
                 if ((this->_voltage > PH_8_VOLTAGE) && (this->_voltage < PH_5_VOLTAGE))
                 {
                     preferences.putFloat("voltage7", this->_neutralVoltage);
+					Serial.print(F("PH 7 Calibration value SAVE THIS FOR LATER: "));
+					Serial.print(this->_neutralVoltage);
                 }
                 else if ((this->_voltage > PH_5_VOLTAGE) && (this->_voltage < PH_3_VOLTAGE))
                 {
                     preferences.putFloat("voltage4", this->_acidVoltage);
+					Serial.print(F("PH 4 Calibration value SAVE THIS FOR LATER: "));
+					Serial.print(this->_acidVoltage);
                 }
                 Serial.print(F(">>>Calibration Successful"));
             }
@@ -249,4 +253,15 @@ void DFRobot_ESP_PH::phCalibration(byte mode)
         }
         break;
     }
+}
+
+void DFRobot_ESP_PH::manualCalibration(float voltage7, float voltage4){
+	preferences.begin("pHVals", false);
+	
+	preferences.putFloat("voltage7", this->_neutralVoltage);
+	Serial.print(F("PH 7 Calibration value saved"));
+	preferences.putFloat("voltage4", this->_acidVoltage);
+	Serial.print(F("PH 4 Calibration value saved"));
+	
+	preferences.end();
 }
