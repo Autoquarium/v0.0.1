@@ -1,8 +1,9 @@
+#include "Arduino.h"
 
 class ir_sensor {
   private:
-  int irSensorPin;
-  int ledPin
+  int irPin;
+  int ledPin;
   public:
   ir_sensor(){
     
@@ -21,26 +22,4 @@ class ir_sensor {
     delay(10);
     digitalWrite(ledPin, LOW);
   }
-}
-
-int value;
-void setup() {
-  // put your setup code here, to run once:
-  ir_sensor ir;
-  //TODO: change these later when using ESP32
-  ir.init(A0, 11);
-
-  Serial.begin(9600);
-}
-
-void loop() {
-  // put your main code here, to run repeatedly:
-  value = ir.readVoltage();
-  Serial.println(value);
-  if(value > 50){
-    digitalWrite(13, HIGH);
-  }
-  else{
-    digitalWrite(13, LOW);
-  }
-}
+};
