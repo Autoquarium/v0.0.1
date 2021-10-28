@@ -1,9 +1,6 @@
 #include "Arduino.h"
 
 class ir_sensor {
-  private:
-  int irPin;
-  int ledPin;
   public:
   ir_sensor(){
     
@@ -22,4 +19,8 @@ class ir_sensor {
     delay(10);
     digitalWrite(ledPin, LOW);
   }
+   
+  private:
+  int irPin;
+  int ledPin;
 };
