@@ -2,6 +2,7 @@
 #include "DFRobot_ESP_PH.h"
 #include "ir_interface.cpp"
 #include "Servo_interface.h"
+#include <OneWire.h> 
 
 //software loop variables
 #define MSTOSECS 1000
