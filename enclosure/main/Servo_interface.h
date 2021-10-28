@@ -1,11 +1,15 @@
-#include <Servo.h>
+#include <ESP32Servo.h>
 
 class Servo_Interface {
 public: 
 
   void initServo(int pin) {
+    // Allow allocation of all timers
+    ESP32PWM::allocateTimer(0);
+    ESP32PWM::allocateTimer(1);
+    ESP32PWM::allocateTimer(2);
+    ESP32PWM::allocateTimer(3);
     servo.attach(pin);
-
     currentPos = 0;
   }
 

@@ -2,7 +2,8 @@
 #include "DFRobot_ESP_PH.h"
 #include "ir_interface.cpp"
 #include "Servo_interface.h"
-#include <OneWire.h> 
+#include "LED_Array.h"
+#include <OneWire.h>
 
 //software loop variables
 #define MSTOSECS 1000
@@ -30,13 +31,18 @@ OneWire ds(DS18S20_Pin);  // on digital pin 2
 
 //Servo
 #define SERVO_PIN 9
-#defin DELAY_BETWEEN_ROTATION 1000
+#define DELAY_BETWEEN_ROTATION 1000
+Servo_Interface si;
+
+//LED array
+LED_Array leds;
 
 //FUNCTION PROTOTYPES
 void updatePHReading(int temperature_in);
 float getTemp();
 void checkForMoveServo();
 void checkFoodLevel();
+void checkForChangeLED();
 
 void setup() {
   // put your setup code here, to run once:
@@ -53,8 +59,12 @@ void setup() {
 
   //init servo
   si.initServo(SERVO_PIN);
+
+  //init led array
+  leds.init(300);
 }
 
+//For more information on software loop, see https://docs.google.com/document/d/1eHEfdXb2m5zrR4cIb2Fecp_S6VAcF3OrBk4lCq4g3QM/edit
 void loop() {
   unsigned long current_time = millis();
 
@@ -64,7 +74,8 @@ void loop() {
     temp_previous_time = current_time;
     //read from temp sensor
     tempVal = getTemp();
-    Serial.println("Temp sensor: %d", tempVal);
+    Serial.print("Temp sensor: ");
+    Serial.println(tempVal);
   }
 
   //read from ph sensor every interval
@@ -72,12 +83,17 @@ void loop() {
     ph_previous_time = current_time;
     //read from ph sensor using temp sensor values
     updatePHReading();
-    Serial.println("pH sensor: %d", phVal);
+    Serial.print("pH sensor: ");
+    Serial.println(pHVal);
   }
 
   //if wireless command received, move servo (Serial Command: MOVESERVO)
-  //TODO: change from parsing serial to parsing wireless message
+  //TODO: change from parsing serial to decoding wireless message
   checkForMoveServo();
+
+  //if wireless command received, change color of leds
+  //TODO: change from parsing serial to decoding wireless message
+  checkForChangeLED();
   
 }
 
@@ -87,8 +103,6 @@ void updatePHReading(){
     //Serial.println(voltage, 4);
 
     pHVal = ph.readPH(voltage, tempVal); // convert voltage to pH with temperature compensation
-    //Serial.print("pH:");
-    //Serial.println(phValue, 4);
 }
 
 float getTemp(){
@@ -115,7 +129,7 @@ float getTemp(){
   }
 
   if ( addr[0] != 0x10 && addr[0] != 0x28) {
-      Serial.print("Device is not recognized");
+      Serial.println("Device is not recognized");
       return -10;
   }
 
@@ -151,6 +165,7 @@ void checkForMoveServo(){
   }
   
   if (msg_in == "MOVESERVO\n") {
+    Serial.println("Start moving servo.");
     //move servo once
     si.fullRotation(1000);
     Serial.println("Servo moved!");
@@ -163,6 +178,23 @@ void checkForMoveServo(){
 
 void checkFoodLevel(){
   if(ir.readVoltage() > IR_THRESHOLD){
-    Serial.print("LOW FOOD LEVEL!");
+    Serial.println("LOW FOOD LEVEL!");
+  }
+  else{
+    Serial.println("Food level is good");
+  }
+}
+
+void checkForChangeLED(){
+    String msg_in;
+
+  //TODO: change to parsing wireless message
+  if (Serial.available() > 0) {
+    msg_in = Serial.readString();
+  }
+  
+  if (msg_in == "CHANGELED\n") {
+    Serial.println("Change the LED!");
+    //TODO actually change the LED
   }
 }
