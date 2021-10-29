@@ -6,8 +6,9 @@ class ir_sensor {
     
   }
   /*Initialize analog pin for use with IR Sensor*/
-  void init(int irPin, int ledPin){
-    //TODO: Make sure this is an analog pin?
+  void init(int irPin_in, int ledPin_in){
+    irPin = irPin_in;
+    ledPin = ledPin_in;
     pinMode(irPin, INPUT);
     pinMode(ledPin, OUTPUT);
   }

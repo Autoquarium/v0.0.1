@@ -19,8 +19,8 @@ volatile float voltage, pHVal;
 DFRobot_ESP_PH ph;
 
 //ir sensor
-#define IR_PIN 2 //TODO change to ESP pins
-#define LED_PIN 1 //TODO change to ESP pins
+#define IR_PIN 34 //TODO change to ESP pins
+#define LED_PIN 23 //TODO change to ESP pins
 #define IR_THRESHOLD 50 //TODO change to reflect values in enclosure
 ir_sensor ir;
 
@@ -112,11 +112,11 @@ float getTemp(){
   byte data[12];
   byte addr[8];
 
-  Serial.println(ds.search(addr));
+  //Serial.println(ds.search(addr));
 
-  for (int i = 0; i < 8; ++i) {
+  /*for (int i = 0; i < 8; ++i) {
     Serial.print(addr[i]);
-  }
+  }*/
   
   if ( !ds.search(addr)) {
       //no more sensors on chain, reset search
@@ -190,11 +190,11 @@ void checkForChangeLED(){
   if (msg_in == "CHANGELED\n") {
     Serial.println("Change the LED!");
     if (currLEDcolor == 'B') {
-      leds.colorTransition(CRGB::Blue, CRGB::White, 5000);
+      leds.colorTransition(0,0,100, 100,100,100, 5000);
       currLEDcolor = 'W';
     }
     else if (currLEDcolor == 'W') {
-      leds.colorTransition(CRGB::White, CRGB::Blue, 5000);
+      leds.colorTransition(100,100,100, 0,0,100, 5000);
       currLEDcolor = 'B';
     }
     else {
