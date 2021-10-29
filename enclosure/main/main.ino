@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 #include "Arduino.h"
 #include "DFRobot_ESP_PH.h"
 #include "ir_interface.cpp"
@@ -20,15 +19,15 @@ volatile float voltage, pHVal;
 DFRobot_ESP_PH ph;
 
 //ir sensor
-#define IR_PIN 26 //TODO change to ESP pins
-#define LED_PIN 22 //TODO change to ESP pins
+#define IR_PIN 2 //TODO change to ESP pins
+#define LED_PIN 1 //TODO change to ESP pins
 #define IR_THRESHOLD 50 //TODO change to reflect values in enclosure
 ir_sensor ir;
 
 //Temperature chip
-int DS18S20_Pin = 4; //DS18S20 Signal pin on digital 4
+int DS18S20_Pin = 4; //DS18S20 Signal pin on digital 2
 volatile float tempVal;
-OneWire ds(DS18S20_Pin);  // on digital pin 4
+OneWire ds(DS18S20_Pin);  // on digital pin 2
 
 //Servo
 #define SERVO_PIN 32
@@ -91,7 +90,7 @@ void loop() {
 
   //if wireless command received, move servo (Serial Command: MOVESERVO)
   //TODO: change from parsing serial to decoding wireless message
-  checkForMoveServo();
+//  checkForMoveServo();
 
   //if wireless command received, change color of leds
   //TODO: change from parsing serial to decoding wireless message
@@ -113,11 +112,11 @@ float getTemp(){
   byte data[12];
   byte addr[8];
 
-  //Serial.println(ds.search(addr));
+  Serial.println(ds.search(addr));
 
-  /*for (int i = 0; i < 8; ++i) {
+  for (int i = 0; i < 8; ++i) {
     Serial.print(addr[i]);
-  }*/
+  }
   
   if ( !ds.search(addr)) {
       //no more sensors on chain, reset search
@@ -158,30 +157,8 @@ float getTemp(){
   return (TemperatureSum * 18 + 5)/10 + 32;
 }
 
-void checkForMoveServo(){
-  String msg_in;
-
-  //TODO: change to parsing wireless message
-  if (Serial.available() > 0) {
-    msg_in = Serial.readString();
-  }
-  
-  if (msg_in == "MOVESERVO\n") {
-    Serial.println("Start moving servo.");
-    //move servo once
-    si.fullRotation(1000);
-    Serial.println("Servo moved!");
-    delay(DELAY_BETWEEN_ROTATION); //delay in between rotations
-
-    //check for low food level
-    checkFoodLevel();
-  }
-}
-
 void checkFoodLevel(){
-  int irVal = ir.readVoltage();
-  Serial.println(irVal);
-  if(irVal > IR_THRESHOLD){
+  if(ir.readVoltage() > IR_THRESHOLD){
     Serial.println("LOW FOOD LEVEL!");
   }
   else{
@@ -195,15 +172,33 @@ void checkForChangeLED(){
   //TODO: change to parsing wireless message
   if (Serial.available() > 0) {
     msg_in = Serial.readString();
+    Serial.print("Serial received ");
+    Serial.println(msg_in);
   }
-  
+
+
+  if (msg_in == "MOVESERVO\n") {
+    Serial.println("Start moving servo.");
+    //move servo once
+    si.fullRotation(1000);
+    Serial.println("Servo moved!");
+    delay(DELAY_BETWEEN_ROTATION); //delay in between rotations
+
+    //check for low food level
+    checkFoodLevel();
+  }
   if (msg_in == "CHANGELED\n") {
     Serial.println("Change the LED!");
     if (currLEDcolor == 'B') {
       leds.colorTransition(CRGB::Blue, CRGB::White, 5000);
+      currLEDcolor = 'W';
     }
     else if (currLEDcolor == 'W') {
       leds.colorTransition(CRGB::White, CRGB::Blue, 5000);
+      currLEDcolor = 'B';
+    }
+    else {
+      leds.setRGBColor(255, 0, 0);
     }
     
   }
