@@ -43,7 +43,7 @@ float getTemp(){
   byte data[12];
   byte addr[8];
 
-  Serial.println(ds.search(addr));
+  //Serial.println(ds.search(addr));
 
   for(int i = 0; i < 8; ++i)
   {

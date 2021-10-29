@@ -19,18 +19,18 @@ volatile float voltage, pHVal;
 DFRobot_ESP_PH ph;
 
 //ir sensor
-#define IR_PIN 2 //TODO change to ESP pins
-#define LED_PIN 1 //TODO change to ESP pins
+#define IR_PIN 26 //TODO change to ESP pins
+#define LED_PIN 22 //TODO change to ESP pins
 #define IR_THRESHOLD 50 //TODO change to reflect values in enclosure
 ir_sensor ir;
 
 //Temperature chip
-int DS18S20_Pin = 4; //DS18S20 Signal pin on digital 2
+int DS18S20_Pin = 4; //DS18S20 Signal pin on digital 4
 volatile float tempVal;
-OneWire ds(DS18S20_Pin);  // on digital pin 2
+OneWire ds(DS18S20_Pin);  // on digital pin 4
 
 //Servo
-#define SERVO_PIN 9
+#define SERVO_PIN 32
 #define DELAY_BETWEEN_ROTATION 1000
 Servo_Interface si;
 
@@ -111,11 +111,11 @@ float getTemp(){
   byte data[12];
   byte addr[8];
 
-  Serial.println(ds.search(addr));
+  //Serial.println(ds.search(addr));
 
-  for (int i = 0; i < 8; ++i) {
+  /*for (int i = 0; i < 8; ++i) {
     Serial.print(addr[i]);
-  }
+  }*/
   
   if ( !ds.search(addr)) {
       //no more sensors on chain, reset search
@@ -177,7 +177,9 @@ void checkForMoveServo(){
 }
 
 void checkFoodLevel(){
-  if(ir.readVoltage() > IR_THRESHOLD){
+  int irVal = ir.readVoltage();
+  Serial.println(irVal);
+  if(irVal > IR_THRESHOLD){
     Serial.println("LOW FOOD LEVEL!");
   }
   else{

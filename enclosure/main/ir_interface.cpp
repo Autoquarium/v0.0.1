@@ -15,9 +15,10 @@ class ir_sensor {
   int readVoltage(){
     digitalWrite(ledPin, HIGH);
     delay(10);
-    return analogRead(irPin);
+    int returnVal = analogRead(irPin);
     delay(10);
     digitalWrite(ledPin, LOW);
+    return returnVal;
   }
    
   private:
