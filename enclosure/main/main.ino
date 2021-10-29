@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 #include "Arduino.h"
 #include "DFRobot_ESP_PH.h"
 #include "ir_interface.cpp"
@@ -36,6 +37,7 @@ Servo_Interface si;
 
 //LED array
 LED_Array leds;
+char currLEDcolor = 'W';
 
 //FUNCTION PROTOTYPES
 void updatePHReading(int temperature_in);
@@ -197,6 +199,12 @@ void checkForChangeLED(){
   
   if (msg_in == "CHANGELED\n") {
     Serial.println("Change the LED!");
-    //TODO actually change the LED
+    if (currLEDcolor == 'B') {
+      leds.colorTransition(CRGB::Blue, CRGB::White, 5000);
+    }
+    else if (currLEDcolor == 'W') {
+      leds.colorTransition(CRGB::White, CRGB::Blue, 5000);
+    }
+    
   }
 }
