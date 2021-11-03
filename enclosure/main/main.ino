@@ -7,6 +7,35 @@
 #include <PubSubClient.h>
 #include <OneWire.h>
 
+// LCD libraries
+#include "Adafruit_GFX.h"     
+#include "Adafruit_ILI9341.h" 
+#include <Wire.h>
+#include  <SPI.h>
+
+// LCD Pins
+#define TFT_DC 9              
+#define TFT_CS 10             
+#define TFT_RST 8             
+#define TFT_MISO 12           
+#define TFT_MOSI 11           
+#define TFT_CLK 13
+
+// Colors for LCD Display
+#define black  0x0000  // 
+#define white 0xFFFF  // RGB
+#define red 0xF800  // R
+#define green 0x3606  // G
+#define water_blue 0x033F6  // B
+#define yellow  0xFFE0  // RG
+#define cyan  0x07FF  // GB
+#define magenta 0xF81F  // RB
+#define gray  0x0821  // 00001 000001 00001
+#define orange 0xFB46
+
+// LCD Initialization
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
+
 //software loop variables
 #define MSTOSECS 1000
 unsigned long ph_previous_time = 0, temp_previous_time = 0;
@@ -47,6 +76,9 @@ void checkForMoveServo();
 void checkFoodLevel();
 void checkForChangeLED();
 
+// 0 = full, 1 = empty
+int foodLevel = 0;
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -65,6 +97,19 @@ void setup() {
 
   //init led array
   leds.init(300);
+  
+  //init LCD
+  tft.begin();                      
+  tft.setRotation(3);            
+  tft.fillScreen(ILI9341_BLACK);
+  
+  Wire.begin();
+
+  printText("AUTOQUARIUM", water_blue,30,20,4);
+  printText("pH", white,40,70,3);
+  printText("Temp", white,200,70,3);
+  printText("Food", white,30,150,3);
+  printText("Fish", white,200,150,3);
 }
 
 //For more information on software loop, see https://docs.google.com/document/d/1eHEfdXb2m5zrR4cIb2Fecp_S6VAcF3OrBk4lCq4g3QM/edit
@@ -88,6 +133,45 @@ void loop() {
     pHVal = getPH();
     Serial.print("pH sensor: ");
     Serial.println(pHVal);
+    
+    if(pHVal == 7)
+    {
+      printText(pHVal, green,40,100,3);
+    }
+    
+    else if(phVal < 6.5 || phVal > 7.5)
+    {
+      printText(pHVal, red,40,100,3);
+    }
+    
+    else
+    {
+      printText(pHVal, orange,40,100,3);
+    }
+    
+    if(tempVal < 23 || tempVal > 27)
+    {
+      printText(tempVal, red,200,100,3);
+    }
+    
+    else
+    {
+      printText(tempVal, green,200,100,3);
+    }
+    
+    // food value
+    if(foodLevel == 0)
+    {
+      printText("Good", green,30,180,3);
+    }
+    else
+    {
+      printText("Low", red,30,180,3);
+    }
+    
+    // Num Fish
+    printText("5", green,200,180,3);
+    
   }
 
   //if wireless command received, move servo (Serial Command: MOVESERVO)
@@ -98,6 +182,15 @@ void loop() {
   //TODO: change from parsing serial to decoding wireless message
   checkForChangeLED();
   
+}
+
+void printText(char *text, uint16_t color, int x, int y,int textSize)
+{
+  tft.setCursor(x, y);
+  tft.setTextColor(color);
+  tft.setTextSize(textSize);
+  tft.setTextWrap(true);
+  tft.print(text);
 }
 
 float getPH(){
@@ -162,9 +255,11 @@ float getTemp(){
 void checkFoodLevel(){
   if(ir.readVoltage() > IR_THRESHOLD){
     Serial.println("LOW FOOD LEVEL!");
+    foodLevel = 1;
   }
   else{
     Serial.println("Food level is good");
+    foodLevel = 0;
   }
 }
 
