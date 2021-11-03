@@ -14,12 +14,12 @@
 #include  <SPI.h>
 
 // LCD Pins
-#define TFT_DC 9              
-#define TFT_CS 10             
-#define TFT_RST 8             
-#define TFT_MISO 12           
-#define TFT_MOSI 11           
-#define TFT_CLK 13
+#define TFT_DC 4
+#define TFT_CS 15
+#define TFT_RST 2
+#define TFT_MISO 19         
+#define TFT_MOSI 23           
+#define TFT_CLK 18 
 
 // Colors for LCD Display
 #define black  0x0000  // 
