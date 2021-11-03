@@ -3,6 +3,8 @@
 #include "ir_interface.cpp"
 #include "Servo_interface.h"
 #include "LED_Array.h"
+#include <WiFi.h>
+#include <PubSubClient.h>
 #include <OneWire.h>
 
 //software loop variables
@@ -39,7 +41,7 @@ LED_Array leds;
 char currLEDcolor = 'W';
 
 //FUNCTION PROTOTYPES
-void updatePHReading(int temperature_in);
+void getPH(int temperature_in);
 float getTemp();
 void checkForMoveServo();
 void checkFoodLevel();
@@ -83,7 +85,7 @@ void loop() {
   if (current_time - ph_previous_time >= ph_interval) {
     ph_previous_time = current_time;
     //read from ph sensor using temp sensor values
-    updatePHReading();
+    pHVal = getPH();
     Serial.print("pH sensor: ");
     Serial.println(pHVal);
   }
@@ -98,12 +100,12 @@ void loop() {
   
 }
 
-void updatePHReading(){
+float getPH(){
     voltage = analogRead(PH_PIN) / ESPADC * ESPVOLTAGE; // read the voltage
     //Serial.print("voltage:");
     //Serial.println(voltage, 4);
 
-    pHVal = ph.readPH(voltage, tempVal); // convert voltage to pH with temperature compensation
+    return ph.readPH(voltage, tempVal); // convert voltage to pH with temperature compensation
 }
 
 float getTemp(){
