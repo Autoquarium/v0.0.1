@@ -3,8 +3,6 @@
 #include "ir_interface.cpp"
 #include "Servo_interface.h"
 #include "LED_Array.h"
-#include <WiFi.h>         //TODO: remove this, replace with fish_mqtt interface in web-app folder 
-#include <PubSubClient.h> //TODO: remove this, replace with fish_mqtt interface in web-app folder
 #include <OneWire.h>
 
 // LCD libraries
@@ -38,15 +36,13 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_R
 
 //software loop variables
 #define MSTOSECS 1000
-unsigned long ph_previous_time = 0, temp_previous_time = 0;
-long ph_interval = 5*MSTOSECS;//*60*10; //10 minutes
-long temp_interval = 5*MSTOSECS;//*60*10; //10 minutes
+unsigned long prev_time = 0;
+long read_interval = 5*MSTOSECS;//*60*10; //10 minutes
 
 //pH sensor
 #define ESPADC 4096.0   //the esp Analog Digital Convertion value
 #define ESPVOLTAGE 3300 //the esp voltage supply value
 #define PH_PIN 35    //pH sensor gpio pin
-volatile float voltage, pHVal;
 DFRobot_ESP_PH ph;
 
 //ir sensor
@@ -57,7 +53,6 @@ ir_sensor ir;
 
 //Temperature chip
 int DS18S20_Pin = 4; //DS18S20 Signal pin on digital 2
-volatile float tempVal;
 OneWire ds(DS18S20_Pin);  // on digital pin 2
 
 //Servo
@@ -100,6 +95,8 @@ void setup() {
   leds.init(300);
   
   //init LCD
+  
+  // TODO: move all this LCD init stuff into a new function -> make an LCD interaface
   tft.begin();                      
   tft.setRotation(3);            
   tft.fillScreen(ILI9341_BLACK);
@@ -122,25 +119,32 @@ void loop() {
   unsigned long current_time = millis();
 
 
-  //read from temp sensor every interval
-  if (current_time - temp_previous_time >= temp_interval) {
-    temp_previous_time = current_time;
-    //read from temp sensor
-    tempVal = getTemp();
-    //char* tempValText = tempVal;
+  //read sensors and publish to broker every interval
+  if (current_time - prev_time >= read_interval) {
+    
+    // get water temperautre
+    float tempVal = getTemp();
     Serial.print("Temp sensor: ");
     Serial.println(tempVal);
-  }
-
-  //read from ph sensor every interval
-  if (current_time - ph_previous_time >= ph_interval) {
-    ph_previous_time = current_time;
-    //read from ph sensor using temp sensor values
-    pHVal = getPH();
-    //char pHValText[8] = pHVal;
+    
+    // get water pH
+    float pHVal = getPH();
     Serial.print("pH sensor: ");
     Serial.println(pHVal);
     
+    // get food level
+    // TODO
+    
+    
+    // publish to MQTT broker
+    // wiqtt.publish(tempVal, pHVal, food);
+    
+    temp_previous_time = current_time;
+    
+    
+    
+    
+    // TODO: move all this LCD stuf into a new function
     if(pHVal == 7)
     {
       printText((String)pHVal, green,40,100,3);
@@ -178,19 +182,20 @@ void loop() {
     
     // Num Fish
     printText("5", green,200,180,3);
-    
   }
-
-  //if wireless command received, move servo (Serial Command: MOVESERVO)
-  //TODO: callback function is called when a wireless command is received, the parsing is done in this function
-  // we need to call wiqtt.loop() -- this function checks to see if there are any new messages and calls the callback function if there is
-//  checkForMoveServo();
-
-  //if wireless command received, change color of leds
-  //TODO: same as above, this is all done in the callback function
-  //checkForChangeLED();
+  
+  // look for incomming messages
+  //wiqtt.loop();
+  
   
 }
+
+
+
+
+
+
+/* TODO: Move all the functions below into a differnt file */
 
 void printText(String text, uint16_t color, int x, int y,int textSize)
 {
@@ -202,7 +207,7 @@ void printText(String text, uint16_t color, int x, int y,int textSize)
 }
 
 float getPH(){
-    voltage = analogRead(PH_PIN) / ESPADC * ESPVOLTAGE; // read the voltage
+    float voltage = analogRead(PH_PIN) / ESPADC * ESPVOLTAGE; // read the voltage
     //Serial.print("voltage:");
     //Serial.println(voltage, 4);
 
