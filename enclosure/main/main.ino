@@ -3,8 +3,8 @@
 #include "ir_interface.cpp"
 #include "Servo_interface.h"
 #include "LED_Array.h"
-#include <WiFi.h>
-#include <PubSubClient.h>
+#include <WiFi.h>         //TODO: remove this, replace with fish_mqtt interface in web-app folder 
+#include <PubSubClient.h> //TODO: remove this, replace with fish_mqtt interface in web-app folder
 #include <OneWire.h>
 
 // LCD libraries
