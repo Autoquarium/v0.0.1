@@ -1,6 +1,5 @@
 // About this class:
 // FishMqtt combines the funcinality of the WiFi client and MQTT client, this allows for more things to be done with less code and clutter 
-
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
@@ -18,8 +17,8 @@ private:
 	char *password = "Fish123!";
 
 	// WiFi credentials
-	char SSID[40];
-	char PWD[40];
+	char wifi_SSID[40];
+	char wifi_PWD[40];
 
 	// WiFi client for esp32 chip
 	WiFiClientSecure espClient;
@@ -38,9 +37,10 @@ public:
 	 * @param PWD_in: the password of the WiFi network to connect to
 	 */
 	void setWifiCreds(char *SSID_in, char *PWD_in) {
+  
 		if (strlen(SSID_in) <= 40 && strlen(PWD_in) <= 40) {
-			strcpy(SSID_in, SSID);
-			strcpy(PWD_in, PWD);	
+			strcpy(wifi_SSID, SSID_in);
+			strcpy(wifi_PWD, PWD_in);	
 		} else {
 			Serial.println("[ERROR] Could not set wiFi SSID or password");
 		}
@@ -56,11 +56,11 @@ public:
 	  int status = WL_IDLE_STATUS;
 	  Serial.print("Connecting to ");
 	  
-	  WiFi.begin(SSID, PWD);
-	  Serial.println(SSID);
+	  WiFi.begin(wifi_SSID, wifi_PWD);
+	  Serial.println(wifi_SSID);
 	  while (status != WL_CONNECTED) {
 	    Serial.print(".");
-	    status = WiFi.begin(SSID, PWD);
+	    status = WiFi.begin(wifi_SSID, wifi_PWD);
 	    delay(10000);
 	  }
 	  Serial.println(WiFi.RSSI());
@@ -80,6 +80,7 @@ public:
 	 */
 	void MQTTreconnect() {
 	  Serial.println("Connecting to MQTT Broker...");
+   connect(clientName, usrname, password);
 	  while (!connected()) {
 	      Serial.println("Reconnecting to MQTT Broker..");
 	      if (connect(clientName, usrname, password)) {
