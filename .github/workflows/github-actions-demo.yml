@@ -1,5 +1,5 @@
 name: Autoquarium
-on: [push]
+on: [workflow_dispatch]
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
