@@ -14,7 +14,7 @@
 #include  <SPI.h>
 
 // LCD Pins
-#define TFT_DC 4
+#define TFT_DC 0
 #define TFT_CS 15
 #define TFT_RST 2
 #define TFT_MISO 19         
@@ -51,7 +51,7 @@ DFRobot_ESP_PH ph;
 
 //ir sensor
 #define IR_PIN 34 //TODO change to ESP pins
-#define LED_PIN 23 //TODO change to ESP pins
+//#define LED_PIN  //TODO change to ESP pins
 #define IR_THRESHOLD 50 //TODO change to reflect values in enclosure
 ir_sensor ir;
 
@@ -75,6 +75,7 @@ float getTemp();
 void checkForMoveServo();
 void checkFoodLevel();
 void checkForChangeLED();
+void printText(String text, uint16_t color, int x, int y,int textSize);
 
 // 0 = full, 1 = empty
 int foodLevel = 0;
@@ -126,6 +127,7 @@ void loop() {
     temp_previous_time = current_time;
     //read from temp sensor
     tempVal = getTemp();
+    //char* tempValText = tempVal;
     Serial.print("Temp sensor: ");
     Serial.println(tempVal);
   }
@@ -135,32 +137,33 @@ void loop() {
     ph_previous_time = current_time;
     //read from ph sensor using temp sensor values
     pHVal = getPH();
+    //char pHValText[8] = pHVal;
     Serial.print("pH sensor: ");
     Serial.println(pHVal);
     
     if(pHVal == 7)
     {
-      printText(pHVal, green,40,100,3);
+      printText((String)pHVal, green,40,100,3);
     }
     
-    else if(phVal < 6.5 || phVal > 7.5)
+    else if(pHVal < 6.5 || pHVal > 7.5)
     {
-      printText(pHVal, red,40,100,3);
+      printText((String)pHVal, red,20,100,3);
     }
     
     else
     {
-      printText(pHVal, orange,40,100,3);
+      printText((String)pHVal, orange,20,100,3);
     }
     
     if(tempVal < 23 || tempVal > 27)
     {
-      printText(tempVal, red,200,100,3);
+      printText((String)tempVal, red,180,100,3);
     }
     
     else
     {
-      printText(tempVal, green,200,100,3);
+      printText((String)tempVal, green,180,100,3);
     }
     
     // food value
@@ -189,7 +192,7 @@ void loop() {
   
 }
 
-void printText(char *text, uint16_t color, int x, int y,int textSize)
+void printText(String text, uint16_t color, int x, int y,int textSize)
 {
   tft.setCursor(x, y);
   tft.setTextColor(color);
