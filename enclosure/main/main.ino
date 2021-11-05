@@ -110,6 +110,10 @@ void setup() {
   printText("Temp", white,200,70,3);
   printText("Food", white,30,150,3);
   printText("Fish", white,200,150,3);
+  
+  
+  // TODO: init MQTT and wifi client using the fish_mqtt interface in web-app folder
+  // see the mqtt_client.ino file for an example on interface usage
 }
 
 //For more information on software loop, see https://docs.google.com/document/d/1eHEfdXb2m5zrR4cIb2Fecp_S6VAcF3OrBk4lCq4g3QM/edit
@@ -175,12 +179,13 @@ void loop() {
   }
 
   //if wireless command received, move servo (Serial Command: MOVESERVO)
-  //TODO: change from parsing serial to decoding wireless message
+  //TODO: callback function is called when a wireless command is received, the parsing is done in this function
+  // we need to call wiqtt.loop() -- this function checks to see if there are any new messages and calls the callback function if there is
 //  checkForMoveServo();
 
   //if wireless command received, change color of leds
-  //TODO: change from parsing serial to decoding wireless message
-  checkForChangeLED();
+  //TODO: same as above, this is all done in the callback function
+  //checkForChangeLED();
   
 }
 
