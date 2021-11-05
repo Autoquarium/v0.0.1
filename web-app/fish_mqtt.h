@@ -1,5 +1,6 @@
 // About this class:
-// FishMqtt combines the funcinality of the WiFi client and MQTT client, this allows for more things to be done with less code and clutter 
+// FishMqtt combines the funcinality of the WiFi client and MQTT client, 
+// this allows for more things to be done with less code and clutter 
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
