@@ -1,4 +1,4 @@
-# example using the mqtt_fish interface
+// example using the mqtt_fish interface
 
 
 #include "mqtt_fish.h"
