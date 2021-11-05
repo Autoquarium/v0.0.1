@@ -3,10 +3,8 @@
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 
-
-
-class FishMqtt {
-
+class FishMqtt : public PubSubClient {
+private:
 	// MQTT broker info
 	char *mqttServer =  "e948e5ec3f1b48708ce7748bdabab96e.s1.eu.hivemq.cloud";
 	int mqttPort = 8883;
@@ -20,21 +18,22 @@ class FishMqtt {
 	char SSID[40];
 	char PWD[40];
 
-
-	// WiFi client
+	// WiFi client for esp32 chip
 	WiFiClientSecure espClient;
-	
-	// mqtt client
-	PubSubClient mqttClient(espClient); 
 
 
 public:
 
-	FishMqtt() {
-		Serial.begin(115200);
-	}
+	// basic constructor
+	FishMqtt() : PubSubClient(espClient) {}
 
-	// sets the SSID and password for the WiFi network
+
+	/**
+	 *	Sets the WiFi network credientals
+	 * 
+	 * @param SSID_in: the name of the WiFi network to connect to
+	 * @param PWD_in: the password of the WiFi network to connect to
+	 */
 	void setWifiCreds(char *SSID_in, char *PWD_in) {
 		if (strlen(SSID_in) <= 40 && strlen(PWD_in) <= 40) {
 			strcpy(SSID_in, SSID);
@@ -45,7 +44,11 @@ public:
 	}
 
 
-	// Connects to the WiFi used the set credentials
+
+	/**
+	 * Connects to the WiFi using the credentials provided in the class variables
+	 *	Loops until connection is established
+	 */
 	void connectToWifi() {
 	  int status = WL_IDLE_STATUS;
 	  Serial.print("Connecting to ");
@@ -59,50 +62,48 @@ public:
 	  }
 	  Serial.println(WiFi.RSSI());
 	  Serial.println("Connected to WiFi");
-	  
+
+	  //needed to bypass verification
+	  // TODO: change to something more secure (see here: https://github.com/hometinker12/ESP8266MQTTSSL)
+	  espClient.setInsecure(); 
 	}
 
 
-	// inital setup of MQTT client
-	void setupMQTT() {
-	  mqttClient.setServer(mqttServer, mqttPort);
-	  mqttClient.setCallback(callback);
-	  delay(1500);
-	  
-	  Serial.println("Connecting to MQTT Broker...");
-	  while (!mqttClient.connected()) {
-	      Serial.println("Reconnecting to MQTT Broker..");
-	      if (mqttClient.connect(clientName, usrname, password)) {
-	        Serial.println("Connected to broker.");
 
-	        // subscribe to topic
-	        mqttClient.subscribe("commands");
-	        Serial.println("Subscribed to topic: commands");
-	        return;
-	      }
-	      if(WiFi.status() != WL_CONNECTED) {
-	        Serial.println("WiFI disconnected");
-	        connectToWiFi();
-	      }
-	  }
-	}
-
-
-	// reconnects when connection is lost
+	/**
+	 * Connects the MQTT broker specified in the setServer() call
+	 * If needed, reconnects to the configured WiFi using connectToWifi()
+	 *
+	 */
 	void MQTTreconnect() {
 	  Serial.println("Connecting to MQTT Broker...");
-	  while (!mqttClient.connected()) {
+	  while (!connected()) {
 	      Serial.println("Reconnecting to MQTT Broker..");
-	      if (mqttClient.connect(clientName, usrname, password)) {
+	      if (connect(clientName, usrname, password)) {
 	        Serial.println("Connected to broker.");
 	        // subscribe to topic
-	        mqttClient.subscribe("command"); //subscribes to all the commands messages triggered by the user
+	        subscribe("command"); //subscribes to all the commands messages triggered by the user
 	        Serial.println("Subscribed to topic: commands");
 	        return;
 	      }
 	      if(WiFi.status() != WL_CONNECTED) {
 	        Serial.println("WiFI disconnected");
-	        connectToWiFi();
+	        connectToWifi();
 	      }
 	  }
-}
+	}
+
+
+
+	/**
+	 * Initlizes the setup of MQTT client, sets the server and port using the class variables 
+	 * calls MQTTrecconnect() to connect to WiFi and then the server 
+	 *
+	 */
+	void setupMQTT() {
+	  setServer(mqttServer, mqttPort);
+	  delay(1500);
+	  MQTTreconnect();
+	}
+
+};
