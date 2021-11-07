@@ -12,9 +12,9 @@
 #include  <SPI.h>
 
 // LCD Pins
-#define TFT_DC 0
+#define TFT_DC 17
 #define TFT_CS 15
-#define TFT_RST 2
+#define TFT_RST 5
 #define TFT_MISO 19         
 #define TFT_MOSI 23           
 #define TFT_CLK 18 
@@ -47,7 +47,7 @@ DFRobot_ESP_PH ph;
 
 //ir sensor
 #define IR_PIN 34 //TODO change to ESP pins
-//#define LED_PIN  //TODO change to ESP pins
+#define LED_PIN 26 //TODO change to ESP pins
 #define IR_THRESHOLD 50 //TODO change to reflect values in enclosure
 ir_sensor ir;
 
@@ -71,6 +71,7 @@ void checkForMoveServo();
 void checkFoodLevel();
 void checkForChangeLED();
 void printText(String text, uint16_t color, int x, int y,int textSize);
+void updateLcdScreen();
 
 // 0 = full, 1 = empty
 int foodLevel = 0;
@@ -117,77 +118,91 @@ void setup() {
 //For more information on software loop, see https://docs.google.com/document/d/1eHEfdXb2m5zrR4cIb2Fecp_S6VAcF3OrBk4lCq4g3QM/edit
 void loop() {
   unsigned long current_time = millis();
-
-
+  //for updating text on lcd
+  float prevTempVal = 0, prevPHVal = 0;
+  String prevFoodLevel = "Good", prevNumFish = "0";
+  
   //read sensors and publish to broker every interval
   if (current_time - prev_time >= read_interval) {
     
-    // get water temperautre
+    // get water temperature
     float tempVal = getTemp();
     Serial.print("Temp sensor: ");
     Serial.println(tempVal);
     
     // get water pH
-    float pHVal = getPH();
+    float pHVal = getPH(tempVal);
     Serial.print("pH sensor: ");
     Serial.println(pHVal);
     
     // get food level
     // TODO
-    
-    
-    // publish to MQTT broker
-    // wiqtt.publish(tempVal, pHVal, food);
-    
-    temp_previous_time = current_time;
-    
-    
-    
-    
-    // TODO: move all this LCD stuf into a new function
+    //For testing purposes only
+    checkForChangeLED();
+
+    // TODO: move all this LCD stuff into a new function
+    tft.fillScreen(ILI9341_BLACK);
+    printText("AUTOQUARIUM", water_blue,30,20,4);
+    printText("pH", white,40,70,3);
+    printText("Temp", white,200,70,3);
+    printText("Food", white,30,150,3);
+    printText("Fish", white,200,150,3);
+    /*printText((String)prevPHVal, black, 40, 100, 3);
+    printText((String)prevTempVal, black, 200, 100, 3);
+    printText((String)prevFoodLevel, black, 30, 180, 3);
+    printText((String)prevNumFish, black, 200, 180, 3);*/
     if(pHVal == 7)
     {
-      printText((String)pHVal, green,40,100,3);
+      printText((String)pHVal, green, 40, 100, 3);
     }
     
     else if(pHVal < 6.5 || pHVal > 7.5)
     {
-      printText((String)pHVal, red,20,100,3);
+      printText((String)pHVal, red,40,100,3);
     }
     
     else
     {
-      printText((String)pHVal, orange,20,100,3);
+      printText((String)pHVal, orange,40,100,3);
     }
+    prevPHVal = pHVal;
     
     if(tempVal < 23 || tempVal > 27)
     {
-      printText((String)tempVal, red,180,100,3);
+      printText((String)tempVal, red,200,100,3);
     }
     
     else
     {
-      printText((String)tempVal, green,180,100,3);
+      printText((String)tempVal, green,200,100,3);
     }
+    prevTempVal = tempVal;
     
     // food value
     if(foodLevel == 0)
     {
       printText("Good", green,30,180,3);
+      prevFoodLevel = "Good";
     }
     else
     {
       printText("Low", red,30,180,3);
+      prevFoodLevel = "Low";
     }
     
-    // Num Fish
+    // Num Fish TODO
     printText("5", green,200,180,3);
+    prevNumFish = "5"; //TODO: change this when we dynamically change fish number
+    
+    
+    // publish to MQTT broker
+    // wiqtt.publish(tempVal, pHVal, food);
+    
+    prev_time = current_time;
   }
   
-  // look for incomming messages
+  // look for incoming messages
   //wiqtt.loop();
-  
-  
 }
 
 
@@ -200,18 +215,18 @@ void loop() {
 void printText(String text, uint16_t color, int x, int y,int textSize)
 {
   tft.setCursor(x, y);
-  tft.setTextColor(color);
   tft.setTextSize(textSize);
   tft.setTextWrap(true);
+  tft.setTextColor(color);
   tft.print(text);
 }
 
-float getPH(){
+float getPH(float temperature_in){
     float voltage = analogRead(PH_PIN) / ESPADC * ESPVOLTAGE; // read the voltage
     //Serial.print("voltage:");
     //Serial.println(voltage, 4);
 
-    return ph.readPH(voltage, tempVal); // convert voltage to pH with temperature compensation
+    return ph.readPH(voltage, temperature_in); // convert voltage to pH with temperature compensation
 }
 
 float getTemp(){
@@ -266,7 +281,9 @@ float getTemp(){
 }
 
 void checkFoodLevel(){
-  if(ir.readVoltage() > IR_THRESHOLD){
+  int irVal = ir.readVoltage();
+  Serial.println(irVal);
+  if(irVal > IR_THRESHOLD){
     Serial.println("LOW FOOD LEVEL!");
     foodLevel = 1;
   }

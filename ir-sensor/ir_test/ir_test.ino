@@ -29,7 +29,7 @@ ir_sensor ir;
 
 void setup() {
   // put your setup code here, to run once:
-  ir.init(34, 23);
+  ir.init(34, 22);
   Serial.begin(115200);
 }
 
