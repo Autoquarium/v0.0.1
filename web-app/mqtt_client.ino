@@ -10,10 +10,39 @@ char wifi_PWD[] = "fishfood";
 
 // this is where the parsing of the subscribed topics is done
 void callback(char* topic, byte* payload, unsigned int length) {
-  // TODO: add the parsing, 
-    // if the topic is "commands/servo" move the servo
-    // if the topic is "commands/led" change the leds
-  return;
+
+    // convert from byte array to char buffer
+    char buff[30];
+    int i = 0;    
+    for (; i < length; i++) {
+      buff[i] = (char) payload[i];
+    }
+    buff[i] = '\0';
+
+
+    // FEEDING CMDS
+    if (!strcmp(topic, "autoq/cmds/feed")) {
+      Serial.println("feed the fish");
+      
+      int num_of_fish = atoi(buff); 
+
+      // TODO: call servo function
+    }
+
+    // LIGHTING CMDS
+    else if (!strcmp(topic, "autoq/cmds/leds")) {
+      Serial.println("change led lighting");
+      
+      int brightness = atoi(strtok(buff, ","));
+      
+      int red = atoi(strtok(NULL, ","));
+      int green = atoi(strtok(NULL, ","));
+      int blue = atoi(strtok(NULL, ","));
+      
+      //TODO: call LED function
+    }
+    
+    return;
 }
 
 void setup() {
@@ -30,22 +59,8 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  
-  // serialize into json string format
-  // TODO: just replace the values with the sensor values
-  DynamicJsonDocument doc(1024);
-  doc["timestamp"]   = 1351824120;
-  doc["pH_val"] = 7.02;
-  doc["temp_val"] = 85.20;
-  doc["food"] = true;
 
-  // publish to broker
-  String output;
-  serializeJson(doc, output);
-  //Serial.println(output);
-  if (!wiqtt.connected())
-    wiqtt.MQTTreconnect();
-  wiqtt.publish("sensor/data/output", "test"); //"{\"timestamp\":1351824120,\"pH_val\":7.02,\"temp_val\":85.2,\"food\":true}"
-  
-  delay(30000); // delay() causes the mqtt connection to break, thus this will break the connection
+  wiqtt.publishSensorVals(90.2, 7.13, 1); // temp, pH, food
+  // wiqtt.loop();
+  // delay(30000); // delay() causes the mqtt connection to break, thus this will break the connection
 }

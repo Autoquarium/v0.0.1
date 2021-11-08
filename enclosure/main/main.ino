@@ -5,7 +5,7 @@
 #include "LED_Array.h"
 #include <OneWire.h>
 #include "lcd.h"
-#include "mqtt_fish.h"
+#include "fish_mqtt.h"
 
 //software loop variables
 #define MSTOSECS 1000
@@ -64,7 +64,14 @@ int getFoodLevel();
 void checkForChangeLED();
 
 
-// this is where the parsing of the subscribed topics is done
+/**
+ * @brief Called everytime a topic that we are subscribed to publishes data, 
+ * calls the appropriate functions to perform the needed actions
+ * 
+ * @param topic the topic that we are subscribed to 
+ * @param payload the actual data receaved
+ * @param length the legnth of the data receaved
+ */
 void callback(char* topic, byte* payload, unsigned int length) {
 
     // convert from byte array to char buffer
@@ -94,12 +101,19 @@ void callback(char* topic, byte* payload, unsigned int length) {
       int green = atoi(strtok(NULL, ","));
       int blue = atoi(strtok(NULL, ","));
       
-      //TODO: call LED function
+
+      // set color and brightness
+      leds.setRGBColor(red, green, blue);
+      // TODO: set brightness
     }
     return;
 }
 
 
+/**
+ * @brief inital setup of devices, this function is only called once
+ * 
+ */
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -128,7 +142,12 @@ void setup() {
 
 }
 
-//For more information on software loop, see https://docs.google.com/document/d/1eHEfdXb2m5zrR4cIb2Fecp_S6VAcF3OrBk4lCq4g3QM/edit
+
+/**
+ * @brief main loop 
+ * more information here: https://docs.google.com/document/d/1eHEfdXb2m5zrR4cIb2Fecp_S6VAcF3OrBk4lCq4g3QM/edit
+ * 
+ */
 void loop() {
   unsigned long current_time = millis();
 
@@ -152,7 +171,7 @@ void loop() {
     lcd.updateLCD(tempVal, pHVal, foodLevel);
     
     // publish to MQTT broker
-    wiqtt.publishSensorVals(tempVal, pHVal, food);
+    wiqtt.publishSensorVals(tempVal, pHVal, foodLevel);
     
     // update time counter
     prev_time = current_time;
@@ -164,6 +183,13 @@ void loop() {
 
 }
 
+
+/**
+ * @brief Get the current pH reading from the pH sensor
+ * 
+ * @param temperature_in The current water temperature
+ * @return float value of the pH
+ */
 float getPH(float temperature_in) {
 
     if (VIRTUAL_SENSOR) return 7.24;
@@ -175,6 +201,12 @@ float getPH(float temperature_in) {
     return ph.readPH(voltage, temperature_in); // convert voltage to pH with temperature compensation
 }
 
+
+/**
+ * @brief Get the current reading from the temperature sensor
+ * 
+ * @return float value of the temperature in Celsius 
+ */
 float getTemp() {
   //returns the temperature from one DS18S20 in DEG Celsius
 
@@ -228,7 +260,12 @@ float getTemp() {
   return (TemperatureSum * 18 + 5)/10 + 32;
 }
 
- // 1 = full, 0 = empty
+
+/**
+ * @brief Get the Food Level
+ * 
+ * @return int, 1 if full, 0 otherwise
+ */
 int getFoodLevel() {
   if (VIRTUAL_SENSOR) return 1;
   int irVal = ir.readVoltage();
@@ -244,6 +281,10 @@ int getFoodLevel() {
 }
 
 
+/**
+ * @brief this function is just for testing without MQTT stuff
+ * 
+ */
 void checkForChangeLED(){
     String msg_in;
 
