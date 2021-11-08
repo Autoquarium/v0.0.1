@@ -4,46 +4,30 @@
 #include "Servo_interface.h"
 #include "LED_Array.h"
 #include <OneWire.h>
-
-// LCD libraries
-#include "Adafruit_GFX.h"     
-#include "Adafruit_ILI9341.h" 
-#include <Wire.h>
-#include  <SPI.h>
-
-// LCD Pins
-#define TFT_DC 17
-#define TFT_CS 15
-#define TFT_RST 5
-#define TFT_MISO 19         
-#define TFT_MOSI 23           
-#define TFT_CLK 18 
-
-// Colors for LCD Display
-#define black  0x0000  // 
-#define white 0xFFFF  // RGB
-#define red 0xF800  // R
-#define green 0x3606  // G
-#define water_blue 0x033F6  // B
-#define yellow  0xFFE0  // RG
-#define cyan  0x07FF  // GB
-#define magenta 0xF81F  // RB
-#define gray  0x0821  // 00001 000001 00001
-#define orange 0xFB46
-
-// LCD Initialization
-Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
+#include "lcd.h"
 
 //software loop variables
 #define MSTOSECS 1000
 unsigned long prev_time = 0;
 long read_interval = 5*MSTOSECS;//*60*10; //10 minutes
 
+// virtual sensor flag (for testing)
+int VIRTUAL_SENSOR = 1;
+
 //pH sensor
 #define ESPADC 4096.0   //the esp Analog Digital Convertion value
 #define ESPVOLTAGE 3300 //the esp voltage supply value
 #define PH_PIN 35    //pH sensor gpio pin
 DFRobot_ESP_PH ph;
+
+// LCD pins
+#define TFT_DC 17
+#define TFT_CS 15
+#define TFT_RST 5
+#define TFT_MISO 19         
+#define TFT_MOSI 23           
+#define TFT_CLK 18 
+LCD lcd(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
 
 //ir sensor
 #define IR_PIN 34 //TODO change to ESP pins
@@ -64,17 +48,28 @@ Servo_Interface si;
 LED_Array leds;
 char currLEDcolor = 'W';
 
+
+// MQTT client
+wifi_SSID = "Fishwifi";
+wifi_PWD = "fishfood";
+FishMqtt wiqtt();
+
+
 //FUNCTION PROTOTYPES
 void getPH(int temperature_in);
 float getTemp();
 void checkForMoveServo();
-void checkFoodLevel();
+int getFoodLevel();
 void checkForChangeLED();
-void printText(String text, uint16_t color, int x, int y,int textSize);
-void updateLcdScreen();
 
-// 0 = full, 1 = empty
-int foodLevel = 0;
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  // TODO: add the parsing, 
+    // if the topic is "commands/servo" move the servo
+    // if the topic is "commands/led" change the leds
+  return;
+}
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -95,34 +90,20 @@ void setup() {
   //init led array
   leds.init(300);
   
-  //init LCD
-  
-  // TODO: move all this LCD init stuff into a new function -> make an LCD interaface
-  tft.begin();                      
-  tft.setRotation(3);            
-  tft.fillScreen(ILI9341_BLACK);
-  
-  Wire.begin();
+  // init MQTT and wifi
+  // TODO: move this to a function to receave user input via a serial cmd
+  wiqtt.setWifiCreds(wifi_SSID, wifi_PWD); // setup wifi
+  wiqtt.connectToWifi();
+  wiqtt.setupMQTT();
+  wiqtt.setCallback(callback);
 
-  printText("AUTOQUARIUM", water_blue,30,20,4);
-  printText("pH", white,40,70,3);
-  printText("Temp", white,200,70,3);
-  printText("Food", white,30,150,3);
-  printText("Fish", white,200,150,3);
-  
-  
-  // TODO: init MQTT and wifi client using the fish_mqtt interface in web-app folder
-  // see the mqtt_client.ino file for an example on interface usage
 }
 
 //For more information on software loop, see https://docs.google.com/document/d/1eHEfdXb2m5zrR4cIb2Fecp_S6VAcF3OrBk4lCq4g3QM/edit
 void loop() {
   unsigned long current_time = millis();
-  //for updating text on lcd
-  float prevTempVal = 0, prevPHVal = 0;
-  String prevFoodLevel = "Good", prevNumFish = "0";
-  
-  //read sensors and publish to broker every interval
+
+  // read sensors and publish to broker every interval
   if (current_time - prev_time >= read_interval) {
     
     // get water temperature
@@ -136,92 +117,31 @@ void loop() {
     Serial.println(pHVal);
     
     // get food level
-    // TODO
-    //For testing purposes only
-    checkForChangeLED();
+    int foodLevel = getFoodLevel();
 
-    // TODO: move all this LCD stuff into a new function
-    tft.fillScreen(ILI9341_BLACK);
-    printText("AUTOQUARIUM", water_blue,30,20,4);
-    printText("pH", white,40,70,3);
-    printText("Temp", white,200,70,3);
-    printText("Food", white,30,150,3);
-    printText("Fish", white,200,150,3);
-    /*printText((String)prevPHVal, black, 40, 100, 3);
-    printText((String)prevTempVal, black, 200, 100, 3);
-    printText((String)prevFoodLevel, black, 30, 180, 3);
-    printText((String)prevNumFish, black, 200, 180, 3);*/
-    if(pHVal == 7)
-    {
-      printText((String)pHVal, green, 40, 100, 3);
-    }
-    
-    else if(pHVal < 6.5 || pHVal > 7.5)
-    {
-      printText((String)pHVal, red,40,100,3);
-    }
-    
-    else
-    {
-      printText((String)pHVal, orange,40,100,3);
-    }
-    prevPHVal = pHVal;
-    
-    if(tempVal < 23 || tempVal > 27)
-    {
-      printText((String)tempVal, red,200,100,3);
-    }
-    
-    else
-    {
-      printText((String)tempVal, green,200,100,3);
-    }
-    prevTempVal = tempVal;
-    
-    // food value
-    if(foodLevel == 0)
-    {
-      printText("Good", green,30,180,3);
-      prevFoodLevel = "Good";
-    }
-    else
-    {
-      printText("Low", red,30,180,3);
-      prevFoodLevel = "Low";
-    }
-    
-    // Num Fish TODO
-    printText("5", green,200,180,3);
-    prevNumFish = "5"; //TODO: change this when we dynamically change fish number
-    
+
+    // display current values on LCD
+    lcd.updateLCD(tempVal, pHVal, foodLevel);
     
     // publish to MQTT broker
-    // wiqtt.publish(tempVal, pHVal, food);
+    wiqtt.publishSensorVals(tempVal, pHVal, food);
     
+    // update time counter
     prev_time = current_time;
   }
   
-  // look for incoming messages
-  //wiqtt.loop();
+  // look for incoming commands
+  checkForChangeLED(); //For testing purposes only, replace with wiqtt.loop()
+  wiqtt.loop();
+
 }
 
 
 
+float getPH(float temperature_in) {
 
+    if (VIRTUAL_SENSOR) return 7.24;
 
-
-/* TODO: Move all the functions below into a differnt file */
-
-void printText(String text, uint16_t color, int x, int y,int textSize)
-{
-  tft.setCursor(x, y);
-  tft.setTextSize(textSize);
-  tft.setTextWrap(true);
-  tft.setTextColor(color);
-  tft.print(text);
-}
-
-float getPH(float temperature_in){
     float voltage = analogRead(PH_PIN) / ESPADC * ESPVOLTAGE; // read the voltage
     //Serial.print("voltage:");
     //Serial.println(voltage, 4);
@@ -229,8 +149,10 @@ float getPH(float temperature_in){
     return ph.readPH(voltage, temperature_in); // convert voltage to pH with temperature compensation
 }
 
-float getTemp(){
+float getTemp() {
   //returns the temperature from one DS18S20 in DEG Celsius
+
+  if (VIRTUAL_SENSOR) return 80.71;
 
   byte data[12];
   byte addr[8];
@@ -280,16 +202,18 @@ float getTemp(){
   return (TemperatureSum * 18 + 5)/10 + 32;
 }
 
-void checkFoodLevel(){
+ // 1 = full, 0 = empty
+int getFoodLevel() {
+  if (VIRTUAL_SENSOR) return 1;
   int irVal = ir.readVoltage();
   Serial.println(irVal);
   if(irVal > IR_THRESHOLD){
     Serial.println("LOW FOOD LEVEL!");
-    foodLevel = 1;
+    return 0;
   }
   else{
     Serial.println("Food level is good");
-    foodLevel = 0;
+    return 1;
   }
 }
 
@@ -312,7 +236,7 @@ void checkForChangeLED(){
     delay(DELAY_BETWEEN_ROTATION); //delay in between rotations
 
     //check for low food level
-    checkFoodLevel();
+    getFoodLevel();
   }
   if (msg_in == "CHANGELED\n") {
     Serial.println("Change the LED!");
