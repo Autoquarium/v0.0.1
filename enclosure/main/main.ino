@@ -5,6 +5,7 @@
 #include "LED_Array.h"
 #include <OneWire.h>
 #include "lcd.h"
+#include "mqtt_fish.h"
 
 //software loop variables
 #define MSTOSECS 1000
