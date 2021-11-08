@@ -64,18 +64,39 @@ int getFoodLevel();
 void checkForChangeLED();
 
 
+// this is where the parsing of the subscribed topics is done
 void callback(char* topic, byte* payload, unsigned int length) {
-  // TODO: add the parsing, 
-    // if the topic is "autoq/cmds/servo" move the servo
-    // if the topic is "autoq/cmds/led" change the leds
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  for (int i=0;i<length;i++) {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
-  return;
+
+    // convert from byte array to char buffer
+    char buff[30];
+    int i = 0;    
+    for (; i < length; i++) {
+      buff[i] = (char) payload[i];
+    }
+    buff[i] = '\0';
+
+    // FEEDING CMDS
+    if (!strcmp(topic, "autoq/cmds/feed")) {
+      Serial.println("feed the fish");
+      
+      int num_of_fish = atoi(buff); 
+
+      // TODO: call servo function
+    }
+
+    // LIGHTING CMDS
+    else if (!strcmp(topic, "autoq/cmds/leds")) {
+      Serial.println("change led lighting");
+      
+      int brightness = atoi(strtok(buff, ","));
+      
+      int red = atoi(strtok(NULL, ","));
+      int green = atoi(strtok(NULL, ","));
+      int blue = atoi(strtok(NULL, ","));
+      
+      //TODO: call LED function
+    }
+    return;
 }
 
 
