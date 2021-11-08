@@ -66,8 +66,15 @@ void checkForChangeLED();
 
 void callback(char* topic, byte* payload, unsigned int length) {
   // TODO: add the parsing, 
-    // if the topic is "commands/servo" move the servo
-    // if the topic is "commands/led" change the leds
+    // if the topic is "autoq/cmds/servo" move the servo
+    // if the topic is "autoq/cmds/led" change the leds
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  for (int i=0;i<length;i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
   return;
 }
 
@@ -120,7 +127,6 @@ void loop() {
     // get food level
     int foodLevel = getFoodLevel();
 
-
     // display current values on LCD
     lcd.updateLCD(tempVal, pHVal, foodLevel);
     
@@ -132,12 +138,10 @@ void loop() {
   }
   
   // look for incoming commands
-  checkForChangeLED(); //For testing purposes only, replace with wiqtt.loop()
+  // checkForChangeLED(); //For testing purposes only, replace with wiqtt.loop()
   wiqtt.loop();
 
 }
-
-
 
 float getPH(float temperature_in) {
 
@@ -217,6 +221,7 @@ int getFoodLevel() {
     return 1;
   }
 }
+
 
 void checkForChangeLED(){
     String msg_in;
