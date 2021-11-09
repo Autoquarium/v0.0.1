@@ -94,20 +94,35 @@ void callback(char* topic, byte* payload, unsigned int length) {
     }
 
     // LIGHTING CMDS
-    else if (!strcmp(topic, "autoq/cmds/leds")) {
-      Serial.println("change led lighting");
-      
-      int brightness = atoi(strtok(buff, ","));
-      
-      int red = atoi(strtok(NULL, ","));
+    else if (!strcmp(topic, "autoq/cmds/led/bright")) {
+        Serial.println("change led brightness");
+        // brightness on scale from (0-100)
+        int brightness = atoi(buff);
+        
+        // TODO: set LED brightness
+        // leds.setBrightness(brightness);
+    }
+    else if (!strcmp(topic, "autoq/cmds/led/color")) {
+      Serial.println("change led color");
+            
+      int red = atoi(strtok(buff, ","));
       int green = atoi(strtok(NULL, ","));
       int blue = atoi(strtok(NULL, ","));
       
-
-      // set color and brightness
+      // set LED color
       leds.setRGBColor(red, green, blue);
-      // TODO: set brightness
     }
+    
+    // SETTING CHANGES
+    else if (!strcmp(topic, "autoq/cmds/settings")) {
+        Serial.println("change settings");
+        // update rate
+        // dynamic lighting
+    } 
+    else {
+        Serial.println("Not a valid topic");
+    }
+   
     return;
 }
 
