@@ -11,6 +11,7 @@
 #define MSTOSECS 1000
 unsigned long prev_time = 0;
 long read_interval = 5*MSTOSECS;//*60*10; //10 minutes
+bool dynamic_lighting = false;
 
 // virtual sensor flag (for testing)
 int VIRTUAL_SENSOR = 1;
@@ -62,6 +63,7 @@ float getTemp();
 void checkForMoveServo();
 int getFoodLevel();
 void checkForChangeLED();
+void updateDynamicLED();
 
 
 /**
@@ -117,7 +119,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     else if (!strcmp(topic, "autoq/cmds/settings")) {
         Serial.println("change settings");
         // update rate
-        // dynamic lighting
+        // update dynamic lighting with new value
     } 
     else {
         Serial.println("Not a valid topic");
@@ -192,6 +194,11 @@ void loop() {
     
     // update time counter
     prev_time = current_time;
+  }
+   
+  // if the dynamic lighting option is selected
+  if (dynamic_lighting) {
+      // update_lighting();
   }
   
   // look for incoming commands
@@ -296,6 +303,17 @@ int getFoodLevel() {
     return 1;
   }
 }
+
+
+/**
+ * @brief allows for dynamic LED changes
+ * 
+ * @param time The current time
+ */
+void updateDynamicLED(int time) {
+    // TODO: based on the current time, change the lights appropperly
+}
+
 
 
 /**
