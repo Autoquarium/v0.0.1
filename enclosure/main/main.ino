@@ -64,6 +64,7 @@ void checkForMoveServo();
 int getFoodLevel();
 void checkForChangeLED();
 void updateDynamicLED();
+void firstTimeSetup();
 
 
 /**
@@ -152,6 +153,10 @@ void setup() {
   //init led array
   leds.init(300);
   
+    
+  // check if connected to computer
+  firstTimeSetup();
+    
   // init MQTT and wifi
   // TODO: move this to a function to receave user input via a serial cmd
   wiqtt.setWifiCreds(wifi_SSID, wifi_PWD); // setup wifi
@@ -314,6 +319,15 @@ void updateDynamicLED(int time) {
     // TODO: based on the current time, change the lights appropperly
 }
 
+
+/**
+ * @brief first-time configuring, setups up wifi credientals, timezone, and clientID
+ * 
+ */
+void firstTimeSetup() {
+    // check for incoming serial connections
+    
+}
 
 
 /**
