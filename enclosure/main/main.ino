@@ -89,6 +89,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
       int num_of_fish = atoi(buff); 
 
       // TODO: call servo function
+        
+      // TODO: publish food level to broker
     }
 
     // LIGHTING CMDS
@@ -171,7 +173,7 @@ void loop() {
     lcd.updateLCD(tempVal, pHVal, foodLevel);
     
     // publish to MQTT broker
-    wiqtt.publishSensorVals(tempVal, pHVal, foodLevel);
+    wiqtt.publishSensorVals(tempVal, pHVal, current_time);
     
     // update time counter
     prev_time = current_time;
