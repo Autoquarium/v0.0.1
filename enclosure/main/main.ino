@@ -198,7 +198,7 @@ void loop() {
    
   // if the dynamic lighting option is selected
   if (dynamic_lighting) {
-      // update_lighting();
+      // updateDynamicLED(current_time);
   }
   
   // look for incoming commands
