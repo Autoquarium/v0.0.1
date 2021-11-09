@@ -320,14 +320,24 @@ void updateDynamicLED(int time) {
 }
 
 
+
 /**
  * @brief first-time configuring, setups up wifi credientals, timezone, and clientID
  * 
  */
 void firstTimeSetup() {
     // check for incoming serial connections
+    // python program sends message to initiate connection
     
+    // get user timezone
+    
+    
+    // get the wifi SSID and password
+    
+    // assure that the wifi can be connected to sucessfully
+    // need to save the values here: https://www.esp32.com/viewtopic.php?t=4767     
 }
+
 
 
 /**
