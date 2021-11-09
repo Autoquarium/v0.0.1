@@ -121,15 +121,15 @@ public:
 	 * 
 	 * @param tempVal the temperature value to be published
 	 * @param pHVal the pH value to be published
-	 * @param foodLevel the food level to be published
+	 * @param time the time that the data was published
 	 */
-   void publishSensorVals(float tempVal, float pHVal, int foodLevel) {
+   void publishSensorVals(float tempVal, float pHVal, int time) {
   
       // Serialize the sensor data
       DynamicJsonDocument doc(1024);
       doc["pH_val"] = pHVal;
       doc["temp_val"] = tempVal;
-      doc["food"] = foodLevel;
+      doc["time"] = time;
       String output;
       serializeJson(doc, output);
   
