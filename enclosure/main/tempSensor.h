@@ -12,12 +12,20 @@ class TempSensor {
     
     }
   
+    /**
+      * @brief initializes the OneWire object 
+      * 
+      * @param pin Sets the pin that sensor reads from
+    */
     void init(int pin)
     {
       ds = new OneWire(pin);
     } 
   
-	  float getTemp()
+    /**
+      * @brief gets the temperature from the sensor in degrees Celsius 
+    */
+    float getTemp()
     {
       //returns the temperature from one DS18S20 in DEG Celsius
 
