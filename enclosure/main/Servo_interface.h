@@ -19,6 +19,7 @@ public:
     currentPos = 180;
     delay(delayIn);
     servo.write(0);
+    delay(delayIn);
 
   }
 
