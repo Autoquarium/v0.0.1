@@ -58,7 +58,6 @@ char* wifi_PWD = "fishfood";
 FishMqtt wiqtt;
 
 
-
 // getting time
 char* ntpServer = "pool.ntp.org";
 long  gmtOffset_sec = -5*60*60;   //Replace with your GMT offset (seconds)
@@ -100,7 +99,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
       
       int num_of_fish = atoi(buff); 
 
-      // TODO: call servo function
+      // call servo function
+      for(int i = 0; i < num_of_fish; i++) {
+        si.fullRotation(1000);
+      }
+      
       
       
       // publish food level to broker
