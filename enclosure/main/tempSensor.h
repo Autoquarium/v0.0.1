@@ -19,6 +19,7 @@ class TempSensor {
     */
     void init(int pin)
     {
+      pinMode(DS18S20_Pin, INPUT);
       ds = new OneWire(pin);
     } 
   
