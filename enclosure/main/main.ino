@@ -7,6 +7,7 @@
 #include "lcd.h"
 #include "fish_mqtt.h"
 #include <time.h>
+#include "tempSensor.h"
 
 //software loop variables
 unsigned long prev_time = 0;
@@ -31,6 +32,7 @@ DFRobot_ESP_PH ph;
 #define TFT_CLK 18 
 int num_of_fish = 5;
 LCD lcd;
+tempSensor temperature;
 
 //ir sensor
 #define IR_PIN 34 //TODO change to ESP pins
@@ -40,7 +42,6 @@ ir_sensor ir;
 
 //Temperature chip
 int DS18S20_Pin = 4; //DS18S20 Signal pin on digital 2
-OneWire ds(DS18S20_Pin);  // on digital pin 2
 
 //Servo
 #define SERVO_PIN 32
@@ -66,7 +67,6 @@ int   daylightOffset_sec = 3600;  //Replace with your daylight offset (seconds)
 
 //FUNCTION PROTOTYPES
 void getPH(int temperature_in);
-float getTemp();
 void checkForMoveServo();
 int getFoodLevel();
 void checkForChangeLED();
@@ -191,7 +191,7 @@ void setup() {
   ph.begin();
 
   // init temp sensor
-  pinMode(DS18S20_Pin, INPUT);
+  temperature.init(DS18S20_Pin);  
 
   // init ir sensor
   ir.init(IR_PIN, LED_PIN);
@@ -238,7 +238,7 @@ void loop() {
   if ((current_time - prev_time >= read_interval) || (current_time - prev_time < 0)) {
     
     // get water temperature
-    float tempVal = getTemp();
+    float tempVal = temperature.getTemp();
     Serial.print("Temp sensor: ");
     Serial.println(tempVal);
     
@@ -286,65 +286,6 @@ float getPH(float temperature_in) {
     //Serial.println(voltage, 4);
 
     return ph.readPH(voltage, temperature_in); // convert voltage to pH with temperature compensation
-}
-
-
-/**
- * @brief Get the current reading from the temperature sensor
- * 
- * @return float value of the temperature in Celsius 
- */
-float getTemp() {
-  //returns the temperature from one DS18S20 in DEG Celsius
-
-  if (VIRTUAL_SENSOR) return 80.71;
-
-  byte data[12];
-  byte addr[8];
-
-  //Serial.println(ds.search(addr));
-
-  /*for (int i = 0; i < 8; ++i) {
-    Serial.print(addr[i]);
-  }*/
-  
-  if ( !ds.search(addr)) {
-      //no more sensors on chain, reset search
-      ds.reset_search();
-      return -1000;
-  }
-
-  if ( OneWire::crc8( addr, 7) != addr[7]) {
-      Serial.println("CRC is not valid!");
-      return -100;
-  }
-
-  if ( addr[0] != 0x10 && addr[0] != 0x28) {
-      Serial.println("Device is not recognized");
-      return -10;
-  }
-
-  ds.reset();
-  ds.select(addr);
-  ds.write(0x44,1); // start conversion, with parasite power on at the end
-
-  byte present = ds.reset();
-  ds.select(addr);    
-  ds.write(0xBE); // Read Scratchpad
-
-  for (int i = 0; i < 9; i++) { // we need 9 bytes
-    data[i] = ds.read();
-  }
-
-  ds.reset_search();
-
-  byte MSB = data[1];
-  byte LSB = data[0];
-
-  float tempRead = ((MSB << 8) | LSB); //using two's compliment
-  float TemperatureSum = tempRead / 16;
-
-  return (TemperatureSum * 18 + 5)/10 + 32;
 }
 
 
