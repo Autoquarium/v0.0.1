@@ -76,6 +76,7 @@ void checkForChangeLED();
 void updateDynamicLED();
 void firstTimeSetup();
 int getTime();
+int getTimeDiff(int time1, int time2);
 
 
 /**
@@ -104,7 +105,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
       Serial.println(num_of_fish); 
 
       // call servo function (once every 12 hours max)
-      if((previous_feed_time == -1) || getTimeDiff(getTime(), previous_feed_time) > MIN_FEED_INTERVAL)){
+      if((previous_feed_time == -1) || (getTimeDiff(getTime(), previous_feed_time) > MIN_FEED_INTERVAL)){
         for(int i = 0; i < num_of_fish; i++) {
           si.fullRotation(1000); // TODO: make this better
         }
@@ -170,19 +171,6 @@ int getTime(){
     Serial.println("Failed to obtain time");
     return -1;
   }
-
-//returns time1-time2 in hour,min format
-int getTimeDiff(int time1, int time2){
-  int diff = time1-time2;
-  int time2_adj;
-  if(diff < 0){
-    time2_adj = 2400 - time2;
-  }
-  diff = time1 + time2_adj;
-  Serial.print("Time difference = ");
-  Serial.println(diff);
-  return diff;
-}
   
   current_hour = String(timeinfo.tm_hour);
   if (timeinfo.tm_min < 10) {
@@ -196,7 +184,22 @@ int getTimeDiff(int time1, int time2){
   return current_hour.toInt();
 }
 
-
+/*
+ * @brief returns time1-time2 in hour,min format
+ * 
+ * @params time1, time2
+ */
+int getTimeDiff(int time1, int time2){
+  int diff = time1-time2;
+  int time2_adj;
+  if(diff < 0){
+    time2_adj = 2400 - time2;
+  }
+  diff = time1 + time2_adj;
+  Serial.print("Time difference = ");
+  Serial.println(diff);
+  return diff;
+}
 
 /**
  * @brief inital setup of devices, this function is only called once

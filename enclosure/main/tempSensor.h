@@ -1,6 +1,5 @@
 // LCD libraries
 #include <OneWire.h> 
-#include <SoftwareSerial.h>
 
 class TempSensor {
 
