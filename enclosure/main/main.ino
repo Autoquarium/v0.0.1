@@ -46,7 +46,10 @@ int DS18S20_Pin = 4; //DS18S20 Signal pin on digital 2
 //Servo
 #define SERVO_PIN 32
 #define DELAY_BETWEEN_ROTATION 1000
+#define MIN_FEED_INTERVAL 1200
 Servo_Interface si;
+int previous_feed_time = -1;
+
 
 //LED array
 LED_Array leds;
@@ -54,8 +57,8 @@ char currLEDcolor = 'W';
 
 
 // MQTT client
-char* wifi_SSID = "Fishwifi";
-char* wifi_PWD = "fishfood";
+char* wifi_SSID = "Verizon-SM-G930V-A5BE";
+char* wifi_PWD = "mtpg344#";
 FishMqtt wiqtt;
 
 
@@ -73,6 +76,7 @@ void checkForChangeLED();
 void updateDynamicLED();
 void firstTimeSetup();
 int getTime();
+int getTimeDiff(int time1, int time2);
 
 
 /**
@@ -100,9 +104,15 @@ void callback(char* topic, byte* payload, unsigned int length) {
       num_of_fish = atoi(buff);
       Serial.println(num_of_fish); 
 
-      // call servo function
-      for(int i = 0; i < num_of_fish; i++) {
-        si.fullRotation(1000); // TODO: make this better
+      // call servo function (once every 12 hours max)
+      if((previous_feed_time == -1) || (getTimeDiff(getTime(), previous_feed_time) > MIN_FEED_INTERVAL)){
+        for(int i = 0; i < num_of_fish; i++) {
+          si.fullRotation(1000); // TODO: make this better
+        }
+        previous_feed_time = getTime();
+      }
+      else{
+        Serial.println("Unable to feed, time interval too close.");
       }
       
       // publish food level to broker
@@ -183,7 +193,22 @@ int getTime(){
   return current_hour.toInt();
 }
 
-
+/*
+ * @brief returns time1-time2 in hour,min format
+ * 
+ * @params time1, time2
+ */
+int getTimeDiff(int time1, int time2){
+  int diff = time1-time2;
+  int time2_adj;
+  if(diff < 0){
+    time2_adj = 2400 - time2;
+    diff = time1 + time2_adj;
+  }
+  Serial.print("Time difference = ");
+  Serial.println(diff);
+  return diff;
+}
 
 /**
  * @brief inital setup of devices, this function is only called once
@@ -291,8 +316,6 @@ float getPH(float temperature_in) {
     return ph.readPH(voltage, temperature_in); // convert voltage to pH with temperature compensation
 }
 
-
-/** TODO: move this to the LED interface
  * @brief allows for dynamic LED changes
  * 
  * @param time The current time
