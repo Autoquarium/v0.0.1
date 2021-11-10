@@ -154,6 +154,12 @@ void callback(char* topic, byte* payload, unsigned int length) {
 }
 
 
+
+/**
+ * @brief Get the time hr:min
+ * 
+ * @return current time in format HHMM
+ */
 int getTime(){
 
   String current_min;
@@ -271,16 +277,13 @@ void loop() {
 }
 
 
-/**
+/** TODO: move this to a pH interface
  * @brief Get the current pH reading from the pH sensor
  * 
  * @param temperature_in The current water temperature
  * @return float value of the pH
  */
 float getPH(float temperature_in) {
-
-    if (VIRTUAL_SENSOR) return 0;
-
     float voltage = analogRead(PH_PIN) / ESPADC * ESPVOLTAGE; // read the voltage
     //Serial.print("voltage:");
     //Serial.println(voltage, 4);
@@ -289,7 +292,7 @@ float getPH(float temperature_in) {
 }
 
 
-/**
+/** TODO: move this to the LED interface
  * @brief allows for dynamic LED changes
  * 
  * @param time The current time
@@ -301,7 +304,7 @@ void updateDynamicLED(int time) {
 
 
 /**
- * @brief first-time configuring, setups up wifi credientals, timezone, and clientID
+ * @brief first-time configuring, setups up wifi credentials, timezone, and clientID
  * 
  */
 void firstTimeSetup() {
