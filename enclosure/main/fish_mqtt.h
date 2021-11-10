@@ -5,6 +5,7 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 
 class FishMqtt : public PubSubClient {
 private:
@@ -85,13 +86,12 @@ public:
 	 */
 	void MQTTreconnect() {
 	  Serial.println("Connecting to MQTT Broker...");
-	  connect(clientName, usrname, password);
 	  while (!connected()) {
 	      Serial.println("Reconnecting to MQTT Broker..");
 	      if (connect(clientName, usrname, password)) {
 	        Serial.println("Connected to broker.");
 	        // subscribe to topic
-	        subscribe("command"); //subscribes to all the commands messages triggered by the user
+	        subscribe("autoq/cmds/#"); //subscribes to all the commands messages triggered by the user
 	        Serial.println("Subscribed to topic: commands");
 	        return;
 	      }
