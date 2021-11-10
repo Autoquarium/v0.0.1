@@ -5,6 +5,7 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 
 class FishMqtt : public PubSubClient {
 private:
@@ -27,15 +28,18 @@ private:
 
 public:
 
-	// basic constructor
+	/**
+	 * @brief Construct a new Fish Mqtt object
+	 * 
+	 */
 	FishMqtt() : PubSubClient(espClient) {}
 
 
 	/**
-	 *	Sets the WiFi network credientals
+	 * @brief sets s the wifi SSID and password, Dose not begin wifi connection 
 	 * 
-	 * @param SSID_in: the name of the WiFi network to connect to
-	 * @param PWD_in: the password of the WiFi network to connect to
+	 * @param SSID_in The name of the WiFi network to connect to
+	 * @param PWD_in The password of the WiFi network to connect to
 	 */
 	void setWifiCreds(char *SSID_in, char *PWD_in) {
   
@@ -50,8 +54,9 @@ public:
 
 
 	/**
-	 * Connects to the WiFi using the credentials provided in the class variables
+	 * @brief Connects to the WiFi using the credentials provided in the class variables
 	 *	Loops until connection is established
+	 * 
 	 */
 	void connectToWifi() {
 	  int status = WL_IDLE_STATUS;
@@ -75,19 +80,18 @@ public:
 
 
 	/**
-	 * Connects the MQTT broker specified in the setServer() call
+	 * @brief Connects the MQTT broker specified in the setServer() call
 	 * If needed, reconnects to the configured WiFi using connectToWifi()
 	 *
 	 */
 	void MQTTreconnect() {
 	  Serial.println("Connecting to MQTT Broker...");
-   connect(clientName, usrname, password);
 	  while (!connected()) {
 	      Serial.println("Reconnecting to MQTT Broker..");
 	      if (connect(clientName, usrname, password)) {
 	        Serial.println("Connected to broker.");
 	        // subscribe to topic
-	        subscribe("command"); //subscribes to all the commands messages triggered by the user
+	        subscribe("autoq/cmds/#"); //subscribes to all the commands messages triggered by the user
 	        Serial.println("Subscribed to topic: commands");
 	        return;
 	      }
@@ -101,7 +105,7 @@ public:
 
 
 	/**
-	 * @brief calls MQTTrecconnect() to connect to WiFi and then the server 
+	 * @brief sets the server and calls MQTTrecconnect() to connect to WiFi and the broker
 	 *
 	 */
 	void setupMQTT() {
@@ -112,20 +116,20 @@ public:
 
 
 	/**
-	 * @brief 
+	 * @brief This function serializes the inputted values and then 
+	 * publishes the serialized string to the MQTT broker
 	 * 
-	 * @param tempVal 
-	 * @param pHVal 
-	 * @param foodLevel 
-	 * @return 
+	 * @param tempVal the temperature value to be published
+	 * @param pHVal the pH value to be published
+	 * @param time the time that the data was published
 	 */
-   void publishSensorVals(float tempVal, float pHVal, int foodLevel) {
+   void publishSensorVals(float tempVal, float pHVal, int time) {
   
       // Serialize the sensor data
       DynamicJsonDocument doc(1024);
       doc["pH_val"] = pHVal;
       doc["temp_val"] = tempVal;
-      doc["food"] = foodLevel;
+      doc["time"] = time;
       String output;
       serializeJson(doc, output);
   

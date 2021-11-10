@@ -4,46 +4,33 @@
 #include "Servo_interface.h"
 #include "LED_Array.h"
 #include <OneWire.h>
-
-// LCD libraries
-#include "Adafruit_GFX.h"     
-#include "Adafruit_ILI9341.h" 
-#include <Wire.h>
-#include  <SPI.h>
-
-// LCD Pins
-#define TFT_DC 17
-#define TFT_CS 15
-#define TFT_RST 5
-#define TFT_MISO 19         
-#define TFT_MOSI 23           
-#define TFT_CLK 18 
-
-// Colors for LCD Display
-#define black  0x0000  // 
-#define white 0xFFFF  // RGB
-#define red 0xF800  // R
-#define green 0x3606  // G
-#define water_blue 0x033F6  // B
-#define yellow  0xFFE0  // RG
-#define cyan  0x07FF  // GB
-#define magenta 0xF81F  // RB
-#define gray  0x0821  // 00001 000001 00001
-#define orange 0xFB46
-
-// LCD Initialization
-Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
+//#include "lcd.h"
+#include "fish_mqtt.h"
+#include <time.h>
 
 //software loop variables
 #define MSTOSECS 1000
 unsigned long prev_time = 0;
-long read_interval = 5*MSTOSECS;//*60*10; //10 minutes
+long read_interval = 2; // in minutes
+bool dynamic_lighting = false;
+
+// virtual sensor flag (for testing)
+int VIRTUAL_SENSOR = 1;
 
 //pH sensor
 #define ESPADC 4096.0   //the esp Analog Digital Convertion value
 #define ESPVOLTAGE 3300 //the esp voltage supply value
 #define PH_PIN 35    //pH sensor gpio pin
 DFRobot_ESP_PH ph;
+
+// LCD pins
+#define TFT_DC 17
+#define TFT_CS 15
+#define TFT_RST 5
+#define TFT_MISO 19         
+#define TFT_MOSI 23           
+#define TFT_CLK 18 
+//LCD lcd;
 
 //ir sensor
 #define IR_PIN 34 //TODO change to ESP pins
@@ -64,18 +51,137 @@ Servo_Interface si;
 LED_Array leds;
 char currLEDcolor = 'W';
 
+
+// MQTT client
+char* wifi_SSID = "Fishwifi";
+char* wifi_PWD = "fishfood";
+FishMqtt wiqtt;
+
+
+// getting time
+char* ntpServer = "pool.ntp.org";
+long  gmtOffset_sec = -5*60*60;   //Replace with your GMT offset (seconds)
+int   daylightOffset_sec = 3600;  //Replace with your daylight offset (seconds)
+
+
 //FUNCTION PROTOTYPES
 void getPH(int temperature_in);
 float getTemp();
 void checkForMoveServo();
-void checkFoodLevel();
+int getFoodLevel();
 void checkForChangeLED();
-void printText(String text, uint16_t color, int x, int y,int textSize);
-void updateLcdScreen();
+void updateDynamicLED();
+void firstTimeSetup();
+int getTime();
 
-// 0 = full, 1 = empty
-int foodLevel = 0;
 
+/**
+ * @brief Called everytime a topic that we are subscribed to publishes data, 
+ * calls the appropriate functions to perform the needed actions
+ * 
+ * @param topic the topic that we are subscribed to 
+ * @param payload the actual data receaved
+ * @param length the legnth of the data receaved
+ */
+void callback(char* topic, byte* payload, unsigned int length) {
+
+    // convert from byte array to char buffer
+    char buff[30];
+    int i = 0;    
+    for (; i < length; i++) {
+      buff[i] = (char) payload[i];
+    }
+    buff[i] = '\0';
+
+    // FEEDING CMDS
+    if (!strcmp(topic, "autoq/cmds/feed")) {
+      Serial.println("feed the fish");
+      
+      int num_of_fish = atoi(buff); 
+
+      // call servo function
+      for(int i = 0; i < num_of_fish; i++) {
+        si.fullRotation(1000); // TODO: make this better
+      }
+      
+      // publish food level to broker
+      if (getFoodLevel()){
+        wiqtt.publish("autoq/sensor/feed", "1");
+      } else {
+        wiqtt.publish("autoq/sensor/feed", "0");
+      }
+    }
+
+    // LIGHTING CMDS
+    else if (!strcmp(topic, "autoq/cmds/leds/bright")) {
+        Serial.println("change led brightness");
+        // brightness on scale from (0-100)
+        int brightness = atoi(buff);
+        
+        // TODO: set LED brightness
+        // leds.setBrightness(brightness);
+    }
+    else if (!strcmp(topic, "autoq/cmds/leds/color")) {
+      Serial.println("change led color");   
+      int r = atoi(strtok(buff, ","));
+      int g = atoi(strtok(NULL, ","));
+      int b = atoi(strtok(NULL, ","));
+      leds.setRGBColor(r, g, b);
+    }
+
+    
+    // SETTING CHANGES
+    else if (!strcmp(topic, "autoq/cmds/settings/autoled")) {
+        // update dynamic lighting with new value
+        int val = atoi(buff);
+        dynamic_lighting = val == 1;
+        Serial.println("dynamic lighting");
+        
+    }
+    else if (!strcmp(topic, "autoq/cmds/settings/rate")) {
+        // update rate
+        int val = atoi(buff);
+        read_interval = val;
+        Serial.println("new update rate");
+    } 
+    
+    else {
+        Serial.println("Not a valid topic");
+    }
+   
+    return;
+}
+
+
+int getTime(){
+
+  String current_min;
+  String current_hour;
+  
+  struct tm timeinfo;
+  if(!getLocalTime(&timeinfo)){
+    Serial.println("Failed to obtain time");
+    return -1;
+  }
+  
+  current_hour = String(timeinfo.tm_hour);
+  if (timeinfo.tm_min < 10) {
+    current_min = String("0") + String(timeinfo.tm_min);
+  } else {
+    current_min = String(timeinfo.tm_min);
+  }
+  
+  current_hour = current_hour + current_min;
+
+  return current_hour.toInt();
+}
+
+
+
+/**
+ * @brief inital setup of devices, this function is only called once
+ * 
+ */
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -94,36 +200,41 @@ void setup() {
 
   //init led array
   leds.init(300);
-  
-  //init LCD
-  
-  // TODO: move all this LCD init stuff into a new function -> make an LCD interaface
-  tft.begin();                      
-  tft.setRotation(3);            
-  tft.fillScreen(ILI9341_BLACK);
-  
-  Wire.begin();
 
-  printText("AUTOQUARIUM", water_blue,30,20,4);
-  printText("pH", white,40,70,3);
-  printText("Temp", white,200,70,3);
-  printText("Food", white,30,150,3);
-  printText("Fish", white,200,150,3);
-  
-  
-  // TODO: init MQTT and wifi client using the fish_mqtt interface in web-app folder
-  // see the mqtt_client.ino file for an example on interface usage
+  // init LCD
+  //lcd.init(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
+    
+  // check if connected to computer
+  firstTimeSetup();
+    
+  // init MQTT and wifi
+  // TODO: move this to a function to receave user input via a serial cmd
+  wiqtt.setWifiCreds(wifi_SSID, wifi_PWD); // setup wifi
+  wiqtt.connectToWifi();
+  wiqtt.setupMQTT();
+  wiqtt.setCallback(callback);
+
+  // Setup clock
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+
 }
 
-//For more information on software loop, see https://docs.google.com/document/d/1eHEfdXb2m5zrR4cIb2Fecp_S6VAcF3OrBk4lCq4g3QM/edit
+
+/**
+ * @brief main loop 
+ * more information here: https://docs.google.com/document/d/1eHEfdXb2m5zrR4cIb2Fecp_S6VAcF3OrBk4lCq4g3QM/edit
+ * 
+ */
 void loop() {
-  unsigned long current_time = millis();
-  //for updating text on lcd
-  float prevTempVal = 0, prevPHVal = 0;
-  String prevFoodLevel = "Good", prevNumFish = "0";
-  
-  //read sensors and publish to broker every interval
-  if (current_time - prev_time >= read_interval) {
+  int current_time = getTime();
+
+  if (current_time == -1) {
+    Serial.println("[ERROR] could not get current time");
+    wiqtt.MQTTreconnect();
+    return;
+  }
+  // read sensors and publish to broker every interval
+  if ((current_time - prev_time >= read_interval) || (current_time - prev_time < 0)) {
     
     // get water temperature
     float tempVal = getTemp();
@@ -136,92 +247,39 @@ void loop() {
     Serial.println(pHVal);
     
     // get food level
-    // TODO
-    //For testing purposes only
-    checkForChangeLED();
+    int foodLevel = getFoodLevel();
 
-    // TODO: move all this LCD stuff into a new function
-    tft.fillScreen(ILI9341_BLACK);
-    printText("AUTOQUARIUM", water_blue,30,20,4);
-    printText("pH", white,40,70,3);
-    printText("Temp", white,200,70,3);
-    printText("Food", white,30,150,3);
-    printText("Fish", white,200,150,3);
-    /*printText((String)prevPHVal, black, 40, 100, 3);
-    printText((String)prevTempVal, black, 200, 100, 3);
-    printText((String)prevFoodLevel, black, 30, 180, 3);
-    printText((String)prevNumFish, black, 200, 180, 3);*/
-    if(pHVal == 7)
-    {
-      printText((String)pHVal, green, 40, 100, 3);
-    }
-    
-    else if(pHVal < 6.5 || pHVal > 7.5)
-    {
-      printText((String)pHVal, red,40,100,3);
-    }
-    
-    else
-    {
-      printText((String)pHVal, orange,40,100,3);
-    }
-    prevPHVal = pHVal;
-    
-    if(tempVal < 23 || tempVal > 27)
-    {
-      printText((String)tempVal, red,200,100,3);
-    }
-    
-    else
-    {
-      printText((String)tempVal, green,200,100,3);
-    }
-    prevTempVal = tempVal;
-    
-    // food value
-    if(foodLevel == 0)
-    {
-      printText("Good", green,30,180,3);
-      prevFoodLevel = "Good";
-    }
-    else
-    {
-      printText("Low", red,30,180,3);
-      prevFoodLevel = "Low";
-    }
-    
-    // Num Fish TODO
-    printText("5", green,200,180,3);
-    prevNumFish = "5"; //TODO: change this when we dynamically change fish number
-    
+    // display current values on LCD
+    //lcd.updateLCD(tempVal, pHVal, foodLevel);
+
+    // update time counter
+    prev_time = current_time;
     
     // publish to MQTT broker
-    // wiqtt.publish(tempVal, pHVal, food);
-    
-    prev_time = current_time;
+    wiqtt.publishSensorVals(tempVal, pHVal, current_time);
+  }
+   
+  // if the dynamic lighting option is selected
+  if (dynamic_lighting) {
+      // updateDynamicLED(current_time);
   }
   
-  // look for incoming messages
-  //wiqtt.loop();
+  // look for incoming commands
+  wiqtt.loop(); // needs to be called every 15 seconds at least
+
 }
 
 
+/**
+ * @brief Get the current pH reading from the pH sensor
+ * 
+ * @param temperature_in The current water temperature
+ * @return float value of the pH
+ */
+float getPH(float temperature_in) {
 
+    if (VIRTUAL_SENSOR) return 0;
 
-
-
-/* TODO: Move all the functions below into a differnt file */
-
-void printText(String text, uint16_t color, int x, int y,int textSize)
-{
-  tft.setCursor(x, y);
-  tft.setTextSize(textSize);
-  tft.setTextWrap(true);
-  tft.setTextColor(color);
-  tft.print(text);
-}
-
-float getPH(float temperature_in){
     float voltage = analogRead(PH_PIN) / ESPADC * ESPVOLTAGE; // read the voltage
     //Serial.print("voltage:");
     //Serial.println(voltage, 4);
@@ -229,8 +287,16 @@ float getPH(float temperature_in){
     return ph.readPH(voltage, temperature_in); // convert voltage to pH with temperature compensation
 }
 
-float getTemp(){
+
+/**
+ * @brief Get the current reading from the temperature sensor
+ * 
+ * @return float value of the temperature in Celsius 
+ */
+float getTemp() {
   //returns the temperature from one DS18S20 in DEG Celsius
+
+  if (VIRTUAL_SENSOR) return 80.71;
 
   byte data[12];
   byte addr[8];
@@ -280,19 +346,62 @@ float getTemp(){
   return (TemperatureSum * 18 + 5)/10 + 32;
 }
 
-void checkFoodLevel(){
+
+/**
+ * @brief Get the Food Level
+ * 
+ * @return int, 1 if full, 0 otherwise
+ */
+int getFoodLevel() {
+  if (VIRTUAL_SENSOR) return 1;
   int irVal = ir.readVoltage();
   Serial.println(irVal);
   if(irVal > IR_THRESHOLD){
     Serial.println("LOW FOOD LEVEL!");
-    foodLevel = 1;
+    return 0;
   }
   else{
     Serial.println("Food level is good");
-    foodLevel = 0;
+    return 1;
   }
 }
 
+
+/**
+ * @brief allows for dynamic LED changes
+ * 
+ * @param time The current time
+ */
+void updateDynamicLED(int time) {
+    // TODO: based on the current time, change the lights appropperly
+}
+
+
+
+/**
+ * @brief first-time configuring, setups up wifi credientals, timezone, and clientID
+ * 
+ */
+void firstTimeSetup() {
+    // check for incoming serial connections
+    // python program sends message to initiate connection
+    
+    // get user timezone
+    
+    
+    // get the wifi SSID and password
+    
+    // assure that the wifi can be connected to sucessfully
+    // need to save the values here: https://www.esp32.com/viewtopic.php?t=4767     
+}
+
+
+
+/**
+ * @brief this function is just for testing without MQTT stuff
+ * 
+ */
+ /*
 void checkForChangeLED(){
     String msg_in;
 
@@ -312,7 +421,7 @@ void checkForChangeLED(){
     delay(DELAY_BETWEEN_ROTATION); //delay in between rotations
 
     //check for low food level
-    checkFoodLevel();
+    getFoodLevel();
   }
   if (msg_in == "CHANGELED\n") {
     Serial.println("Change the LED!");
@@ -330,3 +439,4 @@ void checkForChangeLED(){
     
   }
 }
+*/
