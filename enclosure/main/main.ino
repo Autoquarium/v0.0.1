@@ -194,7 +194,7 @@ void setup() {
   pinMode(DS18S20_Pin, INPUT);
 
   // init ir sensor
-  ir.init(IR_PIN, LED_PIN);
+  ir.init(IR_PIN, LED_PIN, IR_THRESHOLD);
 
   //init servo
   si.initServo(SERVO_PIN);
@@ -248,7 +248,7 @@ void loop() {
     Serial.println(pHVal);
     
     // get food level
-    int foodLevel = getFoodLevel();
+    int foodLevel = ir.getFoodLevel();
 
     // display current values on LCD
     lcd.updateLCD(tempVal, pHVal, foodLevel, num_of_fish);
@@ -348,25 +348,6 @@ float getTemp() {
 }
 
 
-/**
- * @brief Get the Food Level
- * 
- * @return int, 1 if full, 0 otherwise
- */
-int getFoodLevel() {
-  if (VIRTUAL_SENSOR) return 1;
-  int irVal = ir.readVoltage();
-  Serial.println(irVal);
-  if(irVal > IR_THRESHOLD){
-    Serial.println("LOW FOOD LEVEL!");
-    return 0;
-  }
-  else{
-    Serial.println("Food level is good");
-    return 1;
-  }
-}
-
 
 /**
  * @brief allows for dynamic LED changes
@@ -395,49 +376,3 @@ void firstTimeSetup() {
     // assure that the wifi can be connected to sucessfully
     // need to save the values here: https://www.esp32.com/viewtopic.php?t=4767     
 }
-
-
-
-/**
- * @brief this function is just for testing without MQTT stuff
- * 
- */
- /*
-void checkForChangeLED(){
-    String msg_in;
-
-  //TODO: change to parsing wireless message
-  if (Serial.available() > 0) {
-    msg_in = Serial.readString();
-    Serial.print("Serial received ");
-    Serial.println(msg_in);
-  }
-
-
-  if (msg_in == "MOVESERVO\n") {
-    Serial.println("Start moving servo.");
-    //move servo once
-    si.fullRotation(1000);
-    Serial.println("Servo moved!");
-    delay(DELAY_BETWEEN_ROTATION); //delay in between rotations
-
-    //check for low food level
-    getFoodLevel();
-  }
-  if (msg_in == "CHANGELED\n") {
-    Serial.println("Change the LED!");
-    if (currLEDcolor == 'B') {
-      leds.colorTransition(0,0,100, 100,100,100, 5000);
-      currLEDcolor = 'W';
-    }
-    else if (currLEDcolor == 'W') {
-      leds.colorTransition(100,100,100, 0,0,100, 5000);
-      currLEDcolor = 'B';
-    }
-    else {
-      leds.setRGBColor(255, 0, 0);
-    }
-    
-  }
-}
-*/

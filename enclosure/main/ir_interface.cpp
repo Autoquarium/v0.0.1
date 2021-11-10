@@ -2,16 +2,43 @@
 
 class ir_sensor {
   public:
-  ir_sensor(){
+  ir_sensor() {
     
   }
   /*Initialize analog pin for use with IR Sensor*/
-  void init(int irPin_in, int ledPin_in){
+  void init(int irPin_in, int ledPin_in, int IR_THRESHOLD_in){
+    IR_THRESHOLD = IR_THRESHOLD_in;
     irPin = irPin_in;
     ledPin = ledPin_in;
     pinMode(irPin, INPUT);
     pinMode(ledPin, OUTPUT);
   }
+
+
+  /**
+   * @brief Get the Food Level
+   * 
+   * @return int, 1 if full, 0 otherwise
+   */
+  int getFoodLevel() {
+    int irVal = ir.readVoltage();
+    Serial.println(irVal);
+    if(irVal > IR_THRESHOLD){
+      Serial.println("LOW FOOD LEVEL!");
+      return 0;
+    }
+    else{
+      Serial.println("Food level is good");
+      return 1;
+    }
+  }
+
+   
+  private:
+  int irPin;
+  int ledPin;
+  int IR_THRESHOLD;
+
   /*Sets LED pin on, reads voltage from ADC, sets LED pin off*/
   int readVoltage(){
     digitalWrite(ledPin, HIGH);
@@ -21,8 +48,5 @@ class ir_sensor {
     digitalWrite(ledPin, LOW);
     return returnVal;
   }
-   
-  private:
-  int irPin;
-  int ledPin;
+
 };
