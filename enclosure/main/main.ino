@@ -290,26 +290,6 @@ float getPH(float temperature_in) {
 
 
 /**
- * @brief Get the Food Level
- * 
- * @return int, 1 if full, 0 otherwise
- */
-int getFoodLevel() {
-  if (VIRTUAL_SENSOR) return 1;
-  int irVal = ir.readVoltage();
-  Serial.println(irVal);
-  if(irVal > IR_THRESHOLD){
-    Serial.println("LOW FOOD LEVEL!");
-    return 0;
-  }
-  else{
-    Serial.println("Food level is good");
-    return 1;
-  }
-}
-
-
-/**
  * @brief allows for dynamic LED changes
  * 
  * @param time The current time
