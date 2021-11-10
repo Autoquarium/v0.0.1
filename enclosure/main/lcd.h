@@ -22,24 +22,27 @@
 class LCD {
 
 private:
-	Adafruit_ILI9341 tft;
+	Adafruit_ILI9341 *tft;
 
 
 	void printText(String text, uint16_t color, int x, int y,int textSize) {
-	  tft.setCursor(x, y);
-	  tft.setTextSize(textSize);
-	  tft.setTextWrap(true);
-	  tft.setTextColor(color);
-	  tft.print(text);
+	  tft->setCursor(x, y);
+	  tft->setTextSize(textSize);
+	  tft->setTextWrap(true);
+	  tft->setTextColor(color);
+	  tft->print(text);
 	}
 
 
 public:
+  LCD(){
+    
+  }
 	void init(int TFT_CS, int TFT_DC, int TFT_MOSI, int TFT_CLK, int TFT_RST, int TFT_MISO) {
-		tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
-		tft.begin();                      
-		tft.setRotation(3);            
-		tft.fillScreen(ILI9341_BLACK);
+		tft = new Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
+		tft->begin();                      
+		tft->setRotation(3);            
+		tft->fillScreen(ILI9341_BLACK);
   
 		Wire.begin();
 		printText("AUTOQUARIUM", water_blue,30,20,4);
@@ -51,9 +54,9 @@ public:
 
 
 
-	void updateLCD(float tempVal, float pHVal, int foodLevel) {
+	void updateLCD(float tempVal, float pHVal, int foodLevel, int numFish) {
 	    // TODO: move all this LCD stuff into a new function
-	    tft.fillScreen(ILI9341_BLACK);
+	    tft->fillScreen(ILI9341_BLACK);
 	    printText("AUTOQUARIUM", water_blue,30,20,4);
 	    printText("pH", white,40,70,3);
 	    printText("Temp", white,200,70,3);
@@ -89,7 +92,7 @@ public:
 	    }
 	    
 	    // food value
-	    if(foodLevel == 0)
+	    if(foodLevel == 1)
 	    {
 	      printText("Good", green,30,180,3);
 	    }
@@ -98,8 +101,8 @@ public:
 	      printText("Low", red,30,180,3);
 	    }
 	    
-	    // Num Fish TODO
-	    printText("5", green,200,180,3);
+	    // Num Fish
+	    printText((String)numFish, green,200,180,3);
 	}
 
 

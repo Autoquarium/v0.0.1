@@ -4,18 +4,17 @@
 #include "Servo_interface.h"
 #include "LED_Array.h"
 #include <OneWire.h>
-//#include "lcd.h"
+#include "lcd.h"
 #include "fish_mqtt.h"
 #include <time.h>
 
 //software loop variables
-#define MSTOSECS 1000
 unsigned long prev_time = 0;
 long read_interval = 2; // in minutes
 bool dynamic_lighting = false;
 
 // virtual sensor flag (for testing)
-int VIRTUAL_SENSOR = 1;
+int VIRTUAL_SENSOR = 0;
 
 //pH sensor
 #define ESPADC 4096.0   //the esp Analog Digital Convertion value
@@ -30,7 +29,8 @@ DFRobot_ESP_PH ph;
 #define TFT_MISO 19         
 #define TFT_MOSI 23           
 #define TFT_CLK 18 
-//LCD lcd;
+int num_of_fish = 5;
+LCD lcd;
 
 //ir sensor
 #define IR_PIN 34 //TODO change to ESP pins
@@ -97,7 +97,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
     if (!strcmp(topic, "autoq/cmds/feed")) {
       Serial.println("feed the fish");
       
-      int num_of_fish = atoi(buff); 
+      num_of_fish = atoi(buff);
+      Serial.println(num_of_fish); 
 
       // call servo function
       for(int i = 0; i < num_of_fish; i++) {
@@ -202,7 +203,7 @@ void setup() {
   leds.init(300);
 
   // init LCD
-  //lcd.init(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
+  lcd.init(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
     
   // check if connected to computer
   firstTimeSetup();
@@ -250,7 +251,7 @@ void loop() {
     int foodLevel = getFoodLevel();
 
     // display current values on LCD
-    //lcd.updateLCD(tempVal, pHVal, foodLevel);
+    lcd.updateLCD(tempVal, pHVal, foodLevel, num_of_fish);
 
     // update time counter
     prev_time = current_time;
