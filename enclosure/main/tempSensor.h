@@ -19,16 +19,17 @@ class TempSensor {
     */
     void init(int pin)
     {
+      pinMode(DS18S20_Pin, INPUT);
       ds = new OneWire(pin);
     } 
   
     /**
-      * @brief gets the temperature from the sensor in degrees Celsius 
-    */
+      * @brief Get the current reading from the temperature sensor
+      * 
+      * @return float value of the temperature in Celsius 
+      */
     float getTemp()
     {
-      //returns the temperature from one DS18S20 in DEG Celsius
-
       byte data[12];
       byte addr[8];
 
