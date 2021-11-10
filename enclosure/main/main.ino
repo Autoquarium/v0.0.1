@@ -46,7 +46,7 @@ int DS18S20_Pin = 4; //DS18S20 Signal pin on digital 2
 //Servo
 #define SERVO_PIN 32
 #define DELAY_BETWEEN_ROTATION 1000
-#define MIN_FEED_INTERVAL 01
+#define MIN_FEED_INTERVAL 1200
 Servo_Interface si;
 int previous_feed_time = -1;
 
@@ -57,8 +57,8 @@ char currLEDcolor = 'W';
 
 
 // MQTT client
-char* wifi_SSID = "Fishwifi";
-char* wifi_PWD = "fishfood";
+char* wifi_SSID = "Verizon-SM-G930V-A5BE";
+char* wifi_PWD = "mtpg344#";
 FishMqtt wiqtt;
 
 
@@ -110,6 +110,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
           si.fullRotation(1000); // TODO: make this better
         }
         previous_feed_time = getTime();
+      }
+      else{
+        Serial.println("Unable to feed, time interval too close.");
       }
       
       // publish food level to broker
@@ -194,8 +197,8 @@ int getTimeDiff(int time1, int time2){
   int time2_adj;
   if(diff < 0){
     time2_adj = 2400 - time2;
+    diff = time1 + time2_adj;
   }
-  diff = time1 + time2_adj;
   Serial.print("Time difference = ");
   Serial.println(diff);
   return diff;
