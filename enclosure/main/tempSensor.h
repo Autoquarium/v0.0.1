@@ -1,6 +1,5 @@
 // LCD libraries
 #include <OneWire.h> 
-#include <SoftwareSerial.h>
 
 class TempSensor {
 
@@ -19,7 +18,7 @@ class TempSensor {
     */
     void init(int pin)
     {
-      pinMode(DS18S20_Pin, INPUT);
+      pinMode(pin, INPUT);
       ds = new OneWire(pin);
     } 
   

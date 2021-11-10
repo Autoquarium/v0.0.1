@@ -11,7 +11,7 @@
 
 //software loop variables
 unsigned long prev_time = 0;
-long read_interval = 2; // in minutes
+long read_interval = 1; // in minutes
 bool dynamic_lighting = false;
 
 // virtual sensor flag (for testing)
@@ -32,7 +32,7 @@ DFRobot_ESP_PH ph;
 #define TFT_CLK 18 
 int num_of_fish = 5;
 LCD lcd;
-tempSensor temperature;
+TempSensor temperature;
 
 //ir sensor
 #define IR_PIN 34 //TODO change to ESP pins
