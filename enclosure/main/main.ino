@@ -101,10 +101,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
       // call servo function
       for(int i = 0; i < num_of_fish; i++) {
-        si.fullRotation(1000);
+        si.fullRotation(1000); // TODO: make this better
       }
-      
-      
       
       // publish food level to broker
       if (getFoodLevel()){
@@ -112,7 +110,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
       } else {
         wiqtt.publish("autoq/sensor/feed", "0");
       }
-      
     }
 
     // LIGHTING CMDS
@@ -125,22 +122,29 @@ void callback(char* topic, byte* payload, unsigned int length) {
         // leds.setBrightness(brightness);
     }
     else if (!strcmp(topic, "autoq/cmds/leds/color")) {
-      Serial.println("change led color");
-            
+      Serial.println("change led color");   
       int r = atoi(strtok(buff, ","));
       int g = atoi(strtok(NULL, ","));
       int b = atoi(strtok(NULL, ","));
-      
-      // set LED color
       leds.setRGBColor(r, g, b);
     }
+
     
     // SETTING CHANGES
-    else if (!strcmp(topic, "autoq/cmds/settings")) {
-        Serial.println("change settings");
-        // update rate
+    else if (!strcmp(topic, "autoq/cmds/settings/autoled")) {
         // update dynamic lighting with new value
+        int val = atoi(buff);
+        dynamic_lighting = val == 1;
+        Serial.println("dynamic lighting");
+        
+    }
+    else if (!strcmp(topic, "autoq/cmds/settings/rate")) {
+        // update rate
+        int val = atoi(buff);
+        read_interval = val;
+        Serial.println("new update rate");
     } 
+    
     else {
         Serial.println("Not a valid topic");
     }
@@ -230,7 +234,7 @@ void loop() {
     return;
   }
   // read sensors and publish to broker every interval
-  if (current_time - prev_time >= read_interval || current_time - prev_time < 0) {
+  if ((current_time - prev_time >= read_interval) || (current_time - prev_time < 0)) {
     
     // get water temperature
     float tempVal = getTemp();
@@ -253,9 +257,6 @@ void loop() {
     
     // publish to MQTT broker
     wiqtt.publishSensorVals(tempVal, pHVal, current_time);
-    
-    
-    
   }
    
   // if the dynamic lighting option is selected
@@ -277,7 +278,7 @@ void loop() {
  */
 float getPH(float temperature_in) {
 
-    if (VIRTUAL_SENSOR) return 7.24;
+    if (VIRTUAL_SENSOR) return 0;
 
     float voltage = analogRead(PH_PIN) / ESPADC * ESPVOLTAGE; // read the voltage
     //Serial.print("voltage:");
