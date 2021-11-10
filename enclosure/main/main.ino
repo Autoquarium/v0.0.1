@@ -7,10 +7,11 @@
 #include "lcd.h"
 #include "fish_mqtt.h"
 #include <time.h>
+#include "tempSensor.h"
 
 //software loop variables
 unsigned long prev_time = 0;
-long read_interval = 2; // in minutes
+long read_interval = 1; // in minutes
 bool dynamic_lighting = false;
 
 // virtual sensor flag (for testing)
@@ -31,6 +32,7 @@ DFRobot_ESP_PH ph;
 #define TFT_CLK 18 
 int num_of_fish = 5;
 LCD lcd;
+TempSensor temperature;
 
 //ir sensor
 #define IR_PIN 34 //TODO change to ESP pins
@@ -40,12 +42,14 @@ ir_sensor ir;
 
 //Temperature chip
 int DS18S20_Pin = 4; //DS18S20 Signal pin on digital 2
-OneWire ds(DS18S20_Pin);  // on digital pin 2
 
 //Servo
 #define SERVO_PIN 32
 #define DELAY_BETWEEN_ROTATION 1000
+#define MIN_FEED_INTERVAL 01
 Servo_Interface si;
+int previous_feed_time = -1;
+
 
 //LED array
 LED_Array leds;
@@ -66,7 +70,6 @@ int   daylightOffset_sec = 3600;  //Replace with your daylight offset (seconds)
 
 //FUNCTION PROTOTYPES
 void getPH(int temperature_in);
-float getTemp();
 void checkForMoveServo();
 int getFoodLevel();
 void checkForChangeLED();
@@ -100,9 +103,12 @@ void callback(char* topic, byte* payload, unsigned int length) {
       num_of_fish = atoi(buff);
       Serial.println(num_of_fish); 
 
-      // call servo function
-      for(int i = 0; i < num_of_fish; i++) {
-        si.fullRotation(1000); // TODO: make this better
+      // call servo function (once every 12 hours max)
+      if((previous_feed_time == -1) || getTimeDiff(getTime(), previous_feed_time) > MIN_FEED_INTERVAL)){
+        for(int i = 0; i < num_of_fish; i++) {
+          si.fullRotation(1000); // TODO: make this better
+        }
+        previous_feed_time = getTime();
       }
       
       // publish food level to broker
@@ -164,6 +170,19 @@ int getTime(){
     Serial.println("Failed to obtain time");
     return -1;
   }
+
+//returns time1-time2 in hour,min format
+int getTimeDiff(int time1, int time2){
+  int diff = time1-time2;
+  int time2_adj;
+  if(diff < 0){
+    time2_adj = 2400 - time2;
+  }
+  diff = time1 + time2_adj;
+  Serial.print("Time difference = ");
+  Serial.println(diff);
+  return diff;
+}
   
   current_hour = String(timeinfo.tm_hour);
   if (timeinfo.tm_min < 10) {
@@ -191,7 +210,7 @@ void setup() {
   ph.begin();
 
   // init temp sensor
-  pinMode(DS18S20_Pin, INPUT);
+  temperature.init(DS18S20_Pin);  
 
   // init ir sensor
   ir.init(IR_PIN, LED_PIN);
@@ -238,7 +257,7 @@ void loop() {
   if ((current_time - prev_time >= read_interval) || (current_time - prev_time < 0)) {
     
     // get water temperature
-    float tempVal = getTemp();
+    float tempVal = temperature.getTemp();
     Serial.print("Temp sensor: ");
     Serial.println(tempVal);
     
@@ -286,65 +305,6 @@ float getPH(float temperature_in) {
     //Serial.println(voltage, 4);
 
     return ph.readPH(voltage, temperature_in); // convert voltage to pH with temperature compensation
-}
-
-
-/**
- * @brief Get the current reading from the temperature sensor
- * 
- * @return float value of the temperature in Celsius 
- */
-float getTemp() {
-  //returns the temperature from one DS18S20 in DEG Celsius
-
-  if (VIRTUAL_SENSOR) return 80.71;
-
-  byte data[12];
-  byte addr[8];
-
-  //Serial.println(ds.search(addr));
-
-  /*for (int i = 0; i < 8; ++i) {
-    Serial.print(addr[i]);
-  }*/
-  
-  if ( !ds.search(addr)) {
-      //no more sensors on chain, reset search
-      ds.reset_search();
-      return -1000;
-  }
-
-  if ( OneWire::crc8( addr, 7) != addr[7]) {
-      Serial.println("CRC is not valid!");
-      return -100;
-  }
-
-  if ( addr[0] != 0x10 && addr[0] != 0x28) {
-      Serial.println("Device is not recognized");
-      return -10;
-  }
-
-  ds.reset();
-  ds.select(addr);
-  ds.write(0x44,1); // start conversion, with parasite power on at the end
-
-  byte present = ds.reset();
-  ds.select(addr);    
-  ds.write(0xBE); // Read Scratchpad
-
-  for (int i = 0; i < 9; i++) { // we need 9 bytes
-    data[i] = ds.read();
-  }
-
-  ds.reset_search();
-
-  byte MSB = data[1];
-  byte LSB = data[0];
-
-  float tempRead = ((MSB << 8) | LSB); //using two's compliment
-  float TemperatureSum = tempRead / 16;
-
-  return (TemperatureSum * 18 + 5)/10 + 32;
 }
 
 
