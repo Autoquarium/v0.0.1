@@ -4,13 +4,14 @@
 #include "Servo_interface.h"
 #include "LED_Array.h"
 #include <OneWire.h>
-#include "lcd.h"
+//#include "lcd.h"
 #include "fish_mqtt.h"
+#include <time.h>
 
 //software loop variables
 #define MSTOSECS 1000
 unsigned long prev_time = 0;
-long read_interval = 5*MSTOSECS;//*60*10; //10 minutes
+long read_interval = 2; // in minutes
 bool dynamic_lighting = false;
 
 // virtual sensor flag (for testing)
@@ -29,7 +30,7 @@ DFRobot_ESP_PH ph;
 #define TFT_MISO 19         
 #define TFT_MOSI 23           
 #define TFT_CLK 18 
-LCD lcd(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
+//LCD lcd;
 
 //ir sensor
 #define IR_PIN 34 //TODO change to ESP pins
@@ -52,9 +53,16 @@ char currLEDcolor = 'W';
 
 
 // MQTT client
-wifi_SSID = "Fishwifi";
-wifi_PWD = "fishfood";
-FishMqtt wiqtt();
+char* wifi_SSID = "Fishwifi";
+char* wifi_PWD = "fishfood";
+FishMqtt wiqtt;
+
+
+
+// getting time
+char* ntpServer = "pool.ntp.org";
+long  gmtOffset_sec = -5*60*60;   //Replace with your GMT offset (seconds)
+int   daylightOffset_sec = 3600;  //Replace with your daylight offset (seconds)
 
 
 //FUNCTION PROTOTYPES
@@ -65,6 +73,7 @@ int getFoodLevel();
 void checkForChangeLED();
 void updateDynamicLED();
 void firstTimeSetup();
+int getTime();
 
 
 /**
@@ -92,12 +101,19 @@ void callback(char* topic, byte* payload, unsigned int length) {
       int num_of_fish = atoi(buff); 
 
       // TODO: call servo function
-        
-      // TODO: publish food level to broker
+      
+      
+      // publish food level to broker
+      if (getFoodLevel()){
+        wiqtt.publish("autoq/sensor/feed", "1");
+      } else {
+        wiqtt.publish("autoq/sensor/feed", "0");
+      }
+      
     }
 
     // LIGHTING CMDS
-    else if (!strcmp(topic, "autoq/cmds/led/bright")) {
+    else if (!strcmp(topic, "autoq/cmds/leds/bright")) {
         Serial.println("change led brightness");
         // brightness on scale from (0-100)
         int brightness = atoi(buff);
@@ -105,15 +121,15 @@ void callback(char* topic, byte* payload, unsigned int length) {
         // TODO: set LED brightness
         // leds.setBrightness(brightness);
     }
-    else if (!strcmp(topic, "autoq/cmds/led/color")) {
+    else if (!strcmp(topic, "autoq/cmds/leds/color")) {
       Serial.println("change led color");
             
-      int red = atoi(strtok(buff, ","));
-      int green = atoi(strtok(NULL, ","));
-      int blue = atoi(strtok(NULL, ","));
+      int r = atoi(strtok(buff, ","));
+      int g = atoi(strtok(NULL, ","));
+      int b = atoi(strtok(NULL, ","));
       
       // set LED color
-      leds.setRGBColor(red, green, blue);
+      leds.setRGBColor(r, g, b);
     }
     
     // SETTING CHANGES
@@ -128,6 +144,31 @@ void callback(char* topic, byte* payload, unsigned int length) {
    
     return;
 }
+
+
+int getTime(){
+
+  String current_min;
+  String current_hour;
+  
+  struct tm timeinfo;
+  if(!getLocalTime(&timeinfo)){
+    Serial.println("Failed to obtain time");
+    return -1;
+  }
+  
+  current_hour = String(timeinfo.tm_hour);
+  if (timeinfo.tm_min < 10) {
+    current_min = String("0") + String(timeinfo.tm_min);
+  } else {
+    current_min = String(timeinfo.tm_min);
+  }
+  
+  current_hour = current_hour + current_min;
+
+  return current_hour.toInt();
+}
+
 
 
 /**
@@ -152,7 +193,9 @@ void setup() {
 
   //init led array
   leds.init(300);
-  
+
+  // init LCD
+  //lcd.init(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
     
   // check if connected to computer
   firstTimeSetup();
@@ -164,6 +207,9 @@ void setup() {
   wiqtt.setupMQTT();
   wiqtt.setCallback(callback);
 
+  // Setup clock
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+
 }
 
 
@@ -173,10 +219,15 @@ void setup() {
  * 
  */
 void loop() {
-  unsigned long current_time = millis();
+  int current_time = getTime();
 
+  if (current_time == -1) {
+    Serial.println("[ERROR] could not get current time");
+    wiqtt.MQTTreconnect();
+    return;
+  }
   // read sensors and publish to broker every interval
-  if (current_time - prev_time >= read_interval) {
+  if (current_time - prev_time >= read_interval || current_time - prev_time < 0) {
     
     // get water temperature
     float tempVal = getTemp();
@@ -192,13 +243,16 @@ void loop() {
     int foodLevel = getFoodLevel();
 
     // display current values on LCD
-    lcd.updateLCD(tempVal, pHVal, foodLevel);
+    //lcd.updateLCD(tempVal, pHVal, foodLevel);
+
+    // update time counter
+    prev_time = current_time;
     
     // publish to MQTT broker
     wiqtt.publishSensorVals(tempVal, pHVal, current_time);
     
-    // update time counter
-    prev_time = current_time;
+    
+    
   }
    
   // if the dynamic lighting option is selected
@@ -207,8 +261,7 @@ void loop() {
   }
   
   // look for incoming commands
-  // checkForChangeLED(); //For testing purposes only, replace with wiqtt.loop()
-  wiqtt.loop();
+  wiqtt.loop(); // needs to be called every 15 seconds at least
 
 }
 
@@ -344,6 +397,7 @@ void firstTimeSetup() {
  * @brief this function is just for testing without MQTT stuff
  * 
  */
+ /*
 void checkForChangeLED(){
     String msg_in;
 
@@ -381,3 +435,4 @@ void checkForChangeLED(){
     
   }
 }
+*/
