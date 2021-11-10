@@ -1,6 +1,6 @@
 // LCD libraries
-#include "Adafruit_GFX.h"     
-#include "Adafruit_ILI9341.h" 
+#include <Adafruit_GFX.h> // https://github.com/adafruit/Adafruit-GFX-Library
+#include <Adafruit_ILI9341.h> // https://github.com/adafruit/Adafruit_ILI9341  && https://github.com/adafruit/Adafruit_BusIO
 #include <Wire.h>
 #include  <SPI.h>
 
@@ -35,7 +35,7 @@ private:
 
 
 public:
-	LCD(int TFT_CS, int TFT_DC, int TFT_MOSI, int TFT_CLK, int TFT_RST, int TFT_MISO) {
+	void init(int TFT_CS, int TFT_DC, int TFT_MOSI, int TFT_CLK, int TFT_RST, int TFT_MISO) {
 		tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
 		tft.begin();                      
 		tft.setRotation(3);            
