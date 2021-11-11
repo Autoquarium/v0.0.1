@@ -64,15 +64,18 @@ char currLEDcolor = 'W';
 
 
 // MQTT client
-char* wifi_SSID = "Verizon-SM-G930V-A5BE";
-char* wifi_PWD = "mtpg344#";
+char* wifi_SSID = "Verizon-SM-G930V-A5BE"; // -- need to persist boots
+char* wifi_PWD = "mtpg344#"; // -- need to persist boots
 FishMqtt wiqtt;
 
+// push Alert info
+String alert_token  = "akiafy9jms26ojnx53bw5vvivj1s4v";
+String alert_usr   = "uaeiijpxfayt5grxg85w97wkeu7gxq"; // -- need to persist boot
 
 // getting time
 char* ntpServer = "pool.ntp.org";
-long  gmtOffset_sec = -5*60*60;   //Replace with your GMT offset (seconds)
-int   daylightOffset_sec = 3600;  //Replace with your daylight offset (seconds)
+long  gmtOffset_sec = -5*60*60;   //Replace with your GMT offset (seconds) -- need to persist boots
+int   daylightOffset_sec = 3600;  //Replace with your daylight offset (seconds) -- need to persist boots
 
 
 //FUNCTION PROTOTYPES
@@ -207,6 +210,7 @@ int getTime(){
   return current_hour.toInt();
 }
 
+
 /*
  * @brief returns time1-time2 in hour,min format
  * 
@@ -223,6 +227,7 @@ int getTimeDiff(int time1, int time2){
   Serial.println(diff);
   return diff;
 }
+
 
 /**
  * @brief inital setup of devices, this function is only called once
@@ -259,6 +264,9 @@ void setup() {
   wiqtt.connectToWifi();
   wiqtt.setupMQTT();
   wiqtt.setCallback(callback);
+    
+  // setup alert
+  wiqtt.setAlertCreds(alert_token, alert_usr);
 
   // Setup clock
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
@@ -335,7 +343,7 @@ float getPH(float temperature_in) {
     return ph.readPH(voltage, temperature_in); // convert voltage to pH with temperature compensation
 }
 
- * @brief allows for dynamic LED changes
+/** @brief allows for dynamic LED changes
  * 
  * @param time The current time
  */
