@@ -8,11 +8,12 @@ public:
 
   /**
 	 * @brief Constructs a new LED_Array object
+   *        Initializes pins and FastLED variables 
 	 * 
 	 * @param numLEDsIn Number of lights of the strip to be turned on
    *                  REQUIRES: numLEDsIn <= 300
 	 */
-  LED_Array(int numLEDsIn) {
+  void init(int numLEDsIn) {
     numLEDs = numLEDsIn;
     FastLED.addLeds<NEOPIXEL, DATA_PIN>(LEDs, numLEDs);
 
@@ -104,6 +105,11 @@ public:
     }
   }
 
+
+  void updateDynamicColor(int currentTime) {
+
+  }
+
   /**
 	 * @brief Transitions from startColorVal to endColorVal, holds endColorVal for delayIn, 
    *        then transitions back to startColorVal
@@ -125,4 +131,10 @@ public:
  private:
   CRGB LEDs[300];
   int numLEDs;
+  double dynamicBlendPercent;
+
+  const CRGB sunrise = CRGB(255,167,0);
+  const CRGB day = CRGB(100,100,100);
+  const CRGB sunset = CRGB(245, 64, 64);
+  const CRGB night = CRGB(0,0,40);
 };
