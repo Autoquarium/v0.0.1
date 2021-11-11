@@ -153,7 +153,7 @@ public:
   }
 
 
-  void sendAlert(char* message) {
+  void sendPushAlert(char* message) {
       String msg = message;
       String url = "https://api.pushover.net/1/messages.json?token=" + API_key + "&user=" + user_alrt + "&message=" + msg;
       http.begin(url);  //Specify destination for HTTP request
