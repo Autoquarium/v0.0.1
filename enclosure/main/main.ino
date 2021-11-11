@@ -9,10 +9,17 @@
 #include <time.h>
 #include "tempSensor.h"
 
-//software loop variables
+// software loop variables (these need to persist boots)
 unsigned long prev_time = 0;
 long read_interval = 1; // in minutes
 bool dynamic_lighting = false;
+bool send_alert = false;
+
+// danger cutoff values
+#define MAX_TEMP 90
+#define MIN_TEMP 70
+#define MAX_PH 9
+#define MIN_PH 3
 
 // virtual sensor flag (for testing)
 int VIRTUAL_SENSOR = 0;
@@ -154,7 +161,14 @@ void callback(char* topic, byte* payload, unsigned int length) {
         int val = atoi(buff);
         read_interval = val;
         Serial.println("new update rate");
-    } 
+    }
+    else if (!strcmp(topic, "autoq/cmds/settings/alert")) {
+        // update rate
+        int val = atoi(buff);
+        send_alert = val == 1;
+        Serial.println("new alert setting");
+    }
+    
     
     else {
         Serial.println("Not a valid topic");
@@ -289,6 +303,11 @@ void loop() {
     
     // publish to MQTT broker
     wiqtt.publishSensorVals(tempVal, pHVal, current_time);
+      
+    // check if an alert needs to be sent
+    if (send_alert) {
+        dangerValueCheck(tempVal, pHVal, foodLevel);
+    }
   }
    
   // if the dynamic lighting option is selected
@@ -324,6 +343,38 @@ void updateDynamicLED(int time) {
     // TODO: based on the current time, change the lights appropperly
 }
 
+
+void dangerValueCheck(float tempVal, float pHVal, int foodLevel ) {
+
+    String msg;
+
+    // water tempurature value check
+    if (tempVal >= MAX_TEMP) {
+        msg = "High water temperature detected. Measured value: " + String(tempVal) + " deg-F";
+        wiqtt.sendPushAlert(msg);
+    }
+    else if (tempVal <= MIN_TEMP) {
+        msg = "Low water temperature detected. Measured value: " + String(tempVal) + " deg-F";
+        wiqtt.sendPushAlert(msg);
+    }
+    
+    // pH value check
+    if (pHVal >= MAX_PH) {
+        msg = "High water pH detected. Measured value: " + String(pHVal);
+        wiqtt.sendPushAlert(msg);
+    }
+    else if (pHVal <= MIN_PH) {
+        msg = "Low water pH detected. Measured value: " + String(pHVal);
+        wiqtt.sendPushAlert(msg);
+    }
+    
+    // food level check
+    if (foodLevel == 0) {
+        msg = "Low food level detected, refill food hopper";
+        wiqtt.sendPushAlert(msg);
+    }
+    return;
+}
 
 
 /**
