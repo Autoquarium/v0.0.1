@@ -21,7 +21,12 @@ private:
 	// WiFi credentials
 	char wifi_SSID[40];
 	char wifi_PWD[40];
-
+	
+	// Alert credentials
+  	HTTPClient http;
+  	String user_alrt;
+  	String API_key;
+	
 	// WiFi client for esp32 chip
 	WiFiClientSecure espClient;
 
@@ -139,5 +144,22 @@ public:
       publish("autoq/sensor/output", output.c_str()); //need to convert to c_string
    }
 
+	
+	
+  void setAlertCreds(String Token, String User) {
+    user_alrt = User;
+    API_key = Token;
+    
+  }
+
+
+  void sendAlert(char* message) {
+      String msg = message;
+      String url = "https://api.pushover.net/1/messages.json?token=" + API_key + "&user=" + user_alrt + "&message=" + msg;
+      http.begin(url);  //Specify destination for HTTP request
+      http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+      int httpResponseCode = http.POST("test POSTING from ESP32");
+      http.end();  //Free resources
+  }
 
 };
