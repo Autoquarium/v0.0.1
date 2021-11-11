@@ -59,7 +59,7 @@ int previous_feed_time = -1;
 
 
 //LED array
-LED_Array leds;
+LED_Array leds(300);
 char currLEDcolor = 'W';
 
 
@@ -248,9 +248,6 @@ void setup() {
 
   //init servo
   si.initServo(SERVO_PIN);
-
-  //init led array
-  leds.init(300);
 
   // init LCD
   lcd.init(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
