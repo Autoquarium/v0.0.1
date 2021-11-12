@@ -24,7 +24,7 @@ bool send_alert = false;
 // virtual sensor flag (for testing)
 int VIRTUAL_SENSOR = 0;
 
-//pH sensor
+// pH sensor
 #define ESPADC 4096.0   //the esp Analog Digital Convertion value
 #define ESPVOLTAGE 3300 //the esp voltage supply value
 #define PH_PIN 35    //pH sensor gpio pin
@@ -41,7 +41,7 @@ int num_of_fish = 5;
 LCD lcd;
 TempSensor temperature;
 
-//ir sensor
+// ir sensor
 #define IR_PIN 34 //TODO change to ESP pins
 #define LED_PIN 26 //TODO change to ESP pins
 #define IR_THRESHOLD 50 //TODO change to reflect values in enclosure
@@ -50,7 +50,7 @@ ir_sensor ir;
 //Temperature chip
 int DS18S20_Pin = 4; //DS18S20 Signal pin on digital 2
 
-//Servo
+// servo
 #define SERVO_PIN 32
 #define DELAY_BETWEEN_ROTATION 1000
 #define MIN_FEED_INTERVAL 1200
@@ -58,8 +58,8 @@ Servo_Interface si;
 int previous_feed_time = -1;
 
 
-//LED array
-LED_Array leds(300);
+// LED array
+LED_Array leds;
 char currLEDcolor = 'W';
 
 
@@ -246,8 +246,11 @@ void setup() {
   // init ir sensor
   ir.init(IR_PIN, LED_PIN, IR_THRESHOLD);
 
-  //init servo
+  // init servo
   si.initServo(SERVO_PIN);
+
+  // init LEDs
+  leds.init(200);
 
   // init LCD
   lcd.init(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);

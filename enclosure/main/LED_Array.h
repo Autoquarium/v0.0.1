@@ -8,7 +8,7 @@ public:
 
   /**
 	 * @brief Constructs a new LED_Array object
-   *        Initializes pins and FastLED variables 
+   *        Initializes pins and FastLED variables `
 	 * 
 	 * @param numLEDsIn Number of lights of the strip to be turned on
    *                  REQUIRES: numLEDsIn <= 300
@@ -17,7 +17,7 @@ public:
     numLEDs = numLEDsIn;
     FastLED.addLeds<NEOPIXEL, DATA_PIN>(LEDs, numLEDs);
 
-    setRGBColor(10, 10, 10);
+    setRGBColor(50, 50, 50);
   }
 
   /**
@@ -40,6 +40,7 @@ public:
 
   /**
 	 * @brief Sets the hue/saturation/value of the lights
+   *        Would prefer if this function was not used (does not update currentRGB)
 	 * 
 	 * @param h hue (color range shown in FastLED documentation)
    *          REQUIRES: 0 <= h <= 255
@@ -64,10 +65,34 @@ public:
    * @param b REQUIRES: 0 <= b <= 255
 	 */
   void setRGBColor(int r, int g, int b) {
+    setRGBColor(CRGB(r,g,b));
+  }
+
+  /**
+	 * @brief Sets the RGB color of the lights
+   *        Note: the strip uses GRB by default but CRGB() handles the conversion
+	 * 
+	 * @param color is of type CRGB from FastLED
+	 */
+  void setRGBColor(CRGB color) {
     for (int i = 0; i < numLEDs; ++i) {
-      LEDs[i] = CRGB(r,g,b);
+      LEDs[i] = color;
     }
     FastLED.show();
+    currentRGB = color;
+  }
+
+  /**
+	 * @brief Changes the brightness according to a 0-100 scale
+	 * 
+	 * @param level REQUIRES: 0 <= level <= 100
+   *              Note: perhaps change to 0 -> 10?
+	 */
+  void setBrightness(int level) {
+    // Using a ratio scale based on the current RGB values
+    // int ratio[3] = {};
+    // CRGB maxBrightnessRGB = {};
+    // CRGB minBrightnessRGB = {};
   }
 
   /**
@@ -97,17 +122,65 @@ public:
   void colorTransition(CRGB color1, CRGB color2, int delayIn) {
     int itrDelay = delayIn/(255/5);
     for (int percent = 0; percent <= 255; percent += 5) {
-      for (int i = 0; i < numLEDs; ++i) {
-        LEDs[i] = blend(color1, color2, percent);
-      }
-    FastLED.show();
-    delay(itrDelay);
+      setRGBColor(blend(color1, color2, percent));
+      delay(itrDelay);
     }
   }
 
-
+  /**
+	 * @brief Updates color blend based on the time of day
+   *        Mimics a sunrise-day-sunset-night cycle
+   *
+   *        TIME: COLOR
+   *        0400: night, start transition to sunrise
+   *        0600: sunrise
+   *        1000: day
+   *        1400: day, start transition to sunset
+   *        1800: sunset
+   *        2200: night
+	 * 
+	 * @param currentTime REQUIRES: 0 <= currentTime < 2400
+	 */
   void updateDynamicColor(int currentTime) {
 
+    CRGB color1, color2;
+    double dynamicBlendPercent;
+
+    if (currentTime < sunriseTStart) { // NIGHT
+      setRGBColor(night);
+      return;
+    }
+    else if (currentTime <= sunriseTEnd) { // NIGHT -> SUNRISE
+      dynamicBlendPercent = ((double)currentTime - sunriseTStart) * 255.0 / (sunriseTEnd - sunriseTStart);
+      color1 = night;
+      color2 = sunrise;
+    }
+    else if (currentTime <= dayTEnd) { // SUNRISE -> DAY
+      dynamicBlendPercent = ((double)currentTime - dayTStart) * 255.0 / (dayTEnd - dayTStart);
+      color1 = sunrise;
+      color2 = day;
+    }
+    else if (currentTime < sunsetTStart) { // DAY
+      setRGBColor(day);
+      return;
+    }
+    else if (currentTime < sunsetTEnd) { // DAY -> SUNSET
+      dynamicBlendPercent = ((double)currentTime - sunsetTStart) * 255.0 / (sunsetTEnd - sunsetTStart);
+      color1 = day;
+      color2 = sunset;
+    }
+    else if (currentTime < nightTEnd) { // SUNSET -> NIGHT
+      dynamicBlendPercent = ((double)currentTime - nightTStart) * 255.0 / (nightTEnd - nightTStart);
+      color1 = sunset;
+      color2 = night;
+    }
+    else { // NIGHT
+      setRGBColor(night);
+      return;
+    }
+    
+    setRGBColor(blend(color1, color2, dynamicBlendPercent));
+    
   }
 
   /**
@@ -131,10 +204,20 @@ public:
  private:
   CRGB LEDs[300];
   int numLEDs;
-  double dynamicBlendPercent;
+  CRGB currentRGB
 
   const CRGB sunrise = CRGB(255,167,0);
   const CRGB day = CRGB(100,100,100);
-  const CRGB sunset = CRGB(245, 64, 64);
+  const CRGB sunset = CRGB(245,123,37);
   const CRGB night = CRGB(0,0,40);
+
+  // dynamic lighting transition schedule
+  const double sunriseTStart = 0400;
+  const double sunriseTEnd = 0559;
+  const double dayTStart = 0600;
+  const double dayTEnd = 1000;
+  const double sunsetTStart = 1400;
+  const double sunsetTEnd = 1759;
+  const double nightTStart = 1800;
+  const double nightTEnd = 2200;
 };
