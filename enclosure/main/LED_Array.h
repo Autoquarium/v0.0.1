@@ -8,7 +8,7 @@ public:
 
   /**
 	 * @brief Constructs a new LED_Array object
-   *        Initializes pins and FastLED variables `
+   *        Initializes pins and FastLED variables
 	 * 
 	 * @param numLEDsIn Number of lights of the strip to be turned on
    *                  REQUIRES: numLEDsIn <= 300
@@ -146,35 +146,35 @@ public:
     CRGB color1, color2;
     double dynamicBlendPercent;
 
-    if (currentTime < sunriseTStart) { // NIGHT
+    if (currentTime < sunriseTStart) { /* NIGHT */
       setRGBColor(night);
       return;
     }
-    else if (currentTime <= sunriseTEnd) { // NIGHT -> SUNRISE
+    else if (currentTime <= sunriseTEnd) { /* NIGHT -> SUNRISE */
       dynamicBlendPercent = ((double)currentTime - sunriseTStart) * 255.0 / (sunriseTEnd - sunriseTStart);
       color1 = night;
       color2 = sunrise;
     }
-    else if (currentTime <= dayTEnd) { // SUNRISE -> DAY
+    else if (currentTime <= dayTEnd) { /* SUNRISE -> DAY */
       dynamicBlendPercent = ((double)currentTime - dayTStart) * 255.0 / (dayTEnd - dayTStart);
       color1 = sunrise;
       color2 = day;
     }
-    else if (currentTime < sunsetTStart) { // DAY
+    else if (currentTime < sunsetTStart) { /* DAY */
       setRGBColor(day);
       return;
     }
-    else if (currentTime < sunsetTEnd) { // DAY -> SUNSET
+    else if (currentTime < sunsetTEnd) { /* DAY -> SUNSET */
       dynamicBlendPercent = ((double)currentTime - sunsetTStart) * 255.0 / (sunsetTEnd - sunsetTStart);
       color1 = day;
       color2 = sunset;
     }
-    else if (currentTime < nightTEnd) { // SUNSET -> NIGHT
+    else if (currentTime < nightTEnd) { /* SUNSET -> NIGHT */
       dynamicBlendPercent = ((double)currentTime - nightTStart) * 255.0 / (nightTEnd - nightTStart);
       color1 = sunset;
       color2 = night;
     }
-    else { // NIGHT
+    else { /* NIGHT */
       setRGBColor(night);
       return;
     }

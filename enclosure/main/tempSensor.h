@@ -1,21 +1,16 @@
-// LCD libraries
+
 #include <OneWire.h> 
 
 class TempSensor {
 
-  private:
-    OneWire *ds;
-  
   public:
-    TempSensor(){
-    
-    }
+    TempSensor() { }
   
     /**
       * @brief initializes the OneWire object 
       * 
       * @param pin Sets the pin that sensor reads from
-    */
+      */
     void init(int pin)
     {
       pinMode(pin, INPUT);
@@ -75,4 +70,7 @@ class TempSensor {
 
       return (TemperatureSum * 18 + 5)/10 + 32;
     }
+
+  private:
+    OneWire *ds;
 };

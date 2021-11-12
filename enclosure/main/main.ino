@@ -247,7 +247,7 @@ void setup() {
   ir.init(IR_PIN, LED_PIN, IR_THRESHOLD);
 
   // init servo
-  si.initServo(SERVO_PIN);
+  si.init(SERVO_PIN);
 
   // init LEDs
   leds.init(200);
@@ -320,7 +320,7 @@ void loop() {
    
   // if the dynamic lighting option is selected
   if (dynamic_lighting) {
-      // updateDynamicLED(current_time);
+    updateDynamicColor(current_time);
   }
   
   // look for incoming commands

@@ -3,7 +3,12 @@
 class Servo_Interface {
 public: 
 
-  void initServo(int pin) {
+  /**
+	 * @brief Constructs a new Servo_Interface object
+	 * 
+	 * @param pin The servo PWM signal is sent through this pin number
+	 */
+  void init(int pin) {
     // Allow allocation of all timers
     ESP32PWM::allocateTimer(0);
     ESP32PWM::allocateTimer(1);
@@ -13,22 +18,30 @@ public:
     currentPos = 0;
   }
 
-  // rotates to 180 degrees and pauses for delayIn ms
+  /**
+	 * @brief Rotates the motor to 180 degrees, pauses, rotates the motor to 0 degrees
+	 * 
+	 * @param delayIn How long the motor pauses in between rotations in milliseconds
+	 */
   void fullRotation(int delayIn) {
-    servo.write(180);
-    currentPos = 180;
+    goToPosition(180);
     delay(delayIn);
-    servo.write(0);
-    delay(delayIn);
-
+    goToPosition(0);
   }
 
-  //resets servo position to zero in the quickest rotation direction
+  /**
+	 * @brief Resets the servo position to 0 degrees
+	 */
   void reset() {
-      servo.write(0);
+    goToPosition(0);
   }
 
-  // moves servo to the desired position by specified direction and speed - unreliable with continuous servo
+  /**
+	 * @brief Rotates the motor to position passed in
+	 * 
+	 * @param pos REQUIRES: 0 <= pos <= 180
+   *            Servo motor position in degrees
+	 */
   void goToPosition(int pos) {
       servo.write(pos);
       currentPos = pos;
