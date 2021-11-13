@@ -25,7 +25,7 @@ private:
 	// Alert credentials
   	HTTPClient http;
   	String user_alrt;
-  	String API_key;
+  	String API_key = "akiafy9jms26ojnx53bw5vvivj1s4v";
 	
 	// WiFi client for esp32 chip
 	WiFiClientSecure espClient;
@@ -146,9 +146,8 @@ public:
 
 	
 	
-  void setAlertCreds(String Token, String User) {
+  void setAlertCreds(String User) {
     user_alrt = User;
-    API_key = Token;
     
   }
 
