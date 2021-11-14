@@ -100,14 +100,14 @@ private:
 
 	// Colors for LCD Display
 	const int black = 0x0000;
-	const int white 0xFFFF  // RGB
-	const int red 0xF800  // R
-	const int green 0x3606  // G
-	const int water_blue 0x033F6  // B
-	const int yellow  0xFFE0  // RG
-	const int cyan  0x07FF  // GB
-	const int magenta 0xF81F  // RB
-	const int gray  0x0821  // 00001 000001 00001
-	const int orange 0xFB46
+	const int white = 0xFFFF;  // RGB
+	const int red = 0xF800;  // R
+	const int green = 0x3606;  // G
+	const int water_blue = 0x033F6;  // B
+	const int yellow  = 0xFFE0;  // RG
+	const int cyan  = 0x07FF;  // GB
+	const int magenta = 0xF81F;  // RB
+	const int gray  = 0x0821;  // 00001 000001 00001
+	const int orange = 0xFB46;
 
 };

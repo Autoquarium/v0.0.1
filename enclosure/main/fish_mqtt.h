@@ -6,6 +6,7 @@
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
+#include <HTTPClient.h>
 
 class FishMqtt : public PubSubClient {
 private:
@@ -152,8 +153,7 @@ public:
   }
 
 
-  void sendPushAlert(char* message) {
-      String msg = message;
+  void sendPushAlert(String msg) {
       String url = "https://api.pushover.net/1/messages.json?token=" + API_key + "&user=" + user_alrt + "&message=" + msg;
       http.begin(url);  //Specify destination for HTTP request
       http.addHeader("Content-Type", "application/x-www-form-urlencoded");

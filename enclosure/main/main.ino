@@ -260,7 +260,7 @@ void setup() {
   wiqtt.setCallback(callback);
     
   // setup alert
-  wiqtt.setAlertCreds(alert_token, alert_usr);
+  wiqtt.setAlertCreds(alert_usr);
 
   // Setup clock
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
@@ -314,7 +314,7 @@ void loop() {
    
   // if the dynamic lighting option is selected
   if (dynamic_lighting) {
-    updateDynamicColor(current_time);
+    leds.updateDynamicColor(current_time);
   }
   
   // look for incoming commands

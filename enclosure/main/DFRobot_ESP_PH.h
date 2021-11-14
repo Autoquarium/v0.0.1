@@ -38,7 +38,7 @@ public:
 	void manualCalibration(float voltage7, float voltage4); //manually input 2-point calibration values
     
     // added below
-    void init(int PH_PIN_in, int ESPADC_in, int ESPVOLTAGE_in);
+    void init(int PH_PIN_in, float ESPADC_in, int ESPVOLTAGE_in);
     float getPH(float temp_in);
 
 private:

@@ -204,7 +204,7 @@ public:
  private:
   CRGB LEDs[300];
   int numLEDs;
-  CRGB currentRGB
+  CRGB currentRGB;
 
   const CRGB sunrise = CRGB(255,167,0);
   const CRGB day = CRGB(100,100,100);
@@ -212,9 +212,9 @@ public:
   const CRGB night = CRGB(0,0,40);
 
   // dynamic lighting transition schedule
-  const double sunriseTStart = 0400;
-  const double sunriseTEnd = 0559;
-  const double dayTStart = 0600;
+  const double sunriseTStart = 400;
+  const double sunriseTEnd = 559;
+  const double dayTStart = 600;
   const double dayTEnd = 1000;
   const double sunsetTStart = 1400;
   const double sunsetTEnd = 1759;

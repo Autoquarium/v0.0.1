@@ -39,8 +39,7 @@ void DFRobot_ESP_PH::init(int PH_PIN_in, float ESPADC_in, int ESPVOLTAGE_in) {
 
 float DFRobot_ESP_PH::getPH(float temp_in) {
     float voltage = analogRead(PH_PIN) / ESPADC * ESPVOLTAGE; // read the voltage
-    return ph.readPH(voltage, temp_in); // convert voltage to pH with temperature compensation
-}
+    return readPH(voltage, temp_in); // convert voltage to pH with temperature compensation
 }
 
 

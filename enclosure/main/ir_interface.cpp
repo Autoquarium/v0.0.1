@@ -1,6 +1,21 @@
 #include "Arduino.h"
 
-class ir_sensor {
+class ir_sensor {   
+  private:
+  int irPin;
+  int ledPin;
+  int IR_THRESHOLD;
+
+  /*Sets LED pin on, reads voltage from ADC, sets LED pin off*/
+  int readVoltage(){
+    digitalWrite(ledPin, HIGH);
+    delay(10);
+    int returnVal = analogRead(irPin);
+    delay(10);
+    digitalWrite(ledPin, LOW);
+    return returnVal;
+  }
+
   public:
   ir_sensor() {
     
@@ -21,7 +36,7 @@ class ir_sensor {
    * @return int, 1 if full, 0 otherwise
    */
   int getFoodLevel() {
-    int irVal = ir.readVoltage();
+    int irVal = readVoltage();
     Serial.println(irVal);
     if(irVal > IR_THRESHOLD){
       Serial.println("LOW FOOD LEVEL!");
@@ -32,21 +47,4 @@ class ir_sensor {
       return 1;
     }
   }
-
-   
-  private:
-  int irPin;
-  int ledPin;
-  int IR_THRESHOLD;
-
-  /*Sets LED pin on, reads voltage from ADC, sets LED pin off*/
-  int readVoltage(){
-    digitalWrite(ledPin, HIGH);
-    delay(10);
-    int returnVal = analogRead(irPin);
-    delay(10);
-    digitalWrite(ledPin, LOW);
-    return returnVal;
-  }
-
 };
