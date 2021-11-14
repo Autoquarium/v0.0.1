@@ -36,6 +36,10 @@ public:
     void begin();            	//initialization
 	float get_neutralVoltage();
 	void manualCalibration(float voltage7, float voltage4); //manually input 2-point calibration values
+    
+    // added below
+    void init(int PH_PIN_in, int ESPADC_in, int ESPVOLTAGE_in);
+    float getPH(float temp_in);
 
 private:
     float _phValue;
@@ -43,6 +47,12 @@ private:
     float _neutralVoltage;
     float _voltage;
     float _temperature;
+    
+    // added below
+    float ESPADC;
+    int ESPVOLTAGE;
+    int PH_PIN;
+
 
     char _cmdReceivedBuffer[ReceivedBufferLength]; //store the Serial CMD
     byte _cmdReceivedBufferIndex;

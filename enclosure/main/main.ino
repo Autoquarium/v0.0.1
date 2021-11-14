@@ -79,7 +79,6 @@ int   daylightOffset_sec = 3600;  //Replace with your daylight offset (seconds) 
 
 
 //FUNCTION PROTOTYPES
-void getPH(int temperature_in);
 void checkForMoveServo();
 int getFoodLevel();
 void checkForChangeLED();
@@ -238,6 +237,7 @@ void setup() {
   Serial.begin(115200);
   
   // init ph sensor
+  ph.init(PH_PIN, ESPADC, ESPVOLTAGE);
   ph.begin();
 
   // init temp sensor
@@ -296,7 +296,7 @@ void loop() {
     Serial.println(tempVal);
     
     // get water pH
-    float pHVal = getPH(tempVal);
+    float pHVal = ph.getPH(tempVal);
     Serial.print("pH sensor: ");
     Serial.println(pHVal);
     
@@ -328,20 +328,6 @@ void loop() {
 
 }
 
-
-/** TODO: move this to a pH interface
- * @brief Get the current pH reading from the pH sensor
- * 
- * @param temperature_in The current water temperature
- * @return float value of the pH
- */
-float getPH(float temperature_in) {
-    float voltage = analogRead(PH_PIN) / ESPADC * ESPVOLTAGE; // read the voltage
-    //Serial.print("voltage:");
-    //Serial.println(voltage, 4);
-
-    return ph.readPH(voltage, temperature_in); // convert voltage to pH with temperature compensation
-}
 
 /** @brief allows for dynamic LED changes
  * 
