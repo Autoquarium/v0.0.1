@@ -79,11 +79,7 @@ int   daylightOffset_sec = 3600;  //Replace with your daylight offset (seconds) 
 
 
 //FUNCTION PROTOTYPES
-void checkForMoveServo();
-int getFoodLevel();
 void checkForChangeLED();
-void updateDynamicLED();
-void firstTimeSetup();
 int getTime();
 int getTimeDiff(int time1, int time2);
 
@@ -125,7 +121,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
       }
       
       // publish food level to broker
-      if (getFoodLevel()){
+      if (ir.getFoodLevel()){
         wiqtt.publish("autoq/sensor/feed", "1");
       } else {
         wiqtt.publish("autoq/sensor/feed", "0");
@@ -255,8 +251,6 @@ void setup() {
   // init LCD
   lcd.init(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
     
-  // check if connected to computer
-  firstTimeSetup();
     
   // init MQTT and wifi
   // TODO: move this to a function to receave user input via a serial cmd
@@ -328,16 +322,13 @@ void loop() {
 
 }
 
-
-/** @brief allows for dynamic LED changes
+/**
+ * @brief checks if any recorded value is outside of acceabale range, sends an alert if so
  * 
- * @param time The current time
+ * @param tempVal water temperature
+ * @param pHVal water pH level
+ * @param foodLevel food level
  */
-void updateDynamicLED(int time) {
-    // TODO: based on the current time, change the lights appropperly
-}
-
-
 void dangerValueCheck(float tempVal, float pHVal, int foodLevel ) {
 
     String msg;
@@ -368,22 +359,4 @@ void dangerValueCheck(float tempVal, float pHVal, int foodLevel ) {
         wiqtt.sendPushAlert(msg);
     }
     return;
-}
-
-
-/**
- * @brief first-time configuring, setups up wifi credentials, timezone, and clientID
- * 
- */
-void firstTimeSetup() {
-    // check for incoming serial connections
-    // python program sends message to initiate connection
-    
-    // get user timezone
-    
-    
-    // get the wifi SSID and password
-    
-    // assure that the wifi can be connected to sucessfully
-    // need to save the values here: https://www.esp32.com/viewtopic.php?t=4767     
 }
