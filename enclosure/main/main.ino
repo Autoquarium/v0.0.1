@@ -13,7 +13,7 @@
 unsigned long prev_time = 0;
 long read_interval = 1; // in minutes
 bool dynamic_lighting = false;
-bool send_alert = false;
+bool send_alert = true;
 
 // danger cutoff values
 #define MAX_TEMP 90
@@ -53,7 +53,7 @@ int DS18S20_Pin = 4; //DS18S20 Signal pin on digital 2
 // servo
 #define SERVO_PIN 32
 #define DELAY_BETWEEN_ROTATION 1000
-#define MIN_FEED_INTERVAL 1200
+#define MIN_FEED_INTERVAL 1
 Servo_Interface si;
 int previous_feed_time = -1;
 
@@ -64,12 +64,11 @@ char currLEDcolor = 'W';
 
 
 // MQTT client
-char* wifi_SSID = "Verizon-SM-G930V-A5BE"; // -- need to persist boots
-char* wifi_PWD = "mtpg344#"; // -- need to persist boots
+char* wifi_SSID = "Fishwifi";//"OnePlus"; //"Verizon-SM-G930V-A5BE"; // -- need to persist boots
+char* wifi_PWD = "fishfood";//"1234abcd";//"mtpg344#"; // -- need to persist boots
 FishMqtt wiqtt;
 
 // push Alert info
-String alert_token  = "akiafy9jms26ojnx53bw5vvivj1s4v";
 String alert_usr   = "uaeiijpxfayt5grxg85w97wkeu7gxq"; // -- need to persist boot
 
 // getting time
@@ -163,7 +162,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     else if (!strcmp(topic, "autoq/cmds/settings/alert")) {
         // update rate
         int val = atoi(buff);
-        send_alert = val == 1;
+        // send_alert = val == 1;
         Serial.println("new alert setting");
     }
     
@@ -246,7 +245,7 @@ void setup() {
   si.init(SERVO_PIN);
 
   // init LEDs
-  leds.init(200);
+  leds.init(25);
 
   // init LCD
   lcd.init(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
@@ -330,6 +329,8 @@ void loop() {
  * @param foodLevel food level
  */
 void dangerValueCheck(float tempVal, float pHVal, int foodLevel ) {
+
+    Serial.println("checking danger values");
 
     String msg;
 
