@@ -153,11 +153,15 @@ public:
   }
 
 
+  // "https://api.pushover.net/1/messages.json?token=akiafy9jms26ojnx53bw5vvivj1s4v&user=uaeiijpxfayt5grxg85w97wkeu7gxq&message=testing";
   void sendPushAlert(String msg) {
-      String url = "https://api.pushover.net/1/messages.json?token=" + API_key + "&user=" + user_alrt + "&message=" + msg;
+      Serial.println("sending notifiction");
+      String url = "https://api.pushover.net/1/messages.json";
+      String data_to_send = "token=" + API_key + "&user=" + user_alrt + "&message=" + msg;
       http.begin(url);  //Specify destination for HTTP request
-      http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-      int httpResponseCode = http.POST("test POSTING from ESP32");
+      //http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+      int httpResponseCode = http.POST(data_to_send);
+      Serial.println(httpResponseCode);
       http.end();  //Free resources
   }
 
