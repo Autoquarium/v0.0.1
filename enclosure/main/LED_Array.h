@@ -1,8 +1,5 @@
 #include <FastLED.h>
 
-//#define DATA_PIN 6 // for Arduino
-#define DATA_PIN 22 // for ESP32
-
 class LED_Array {
 public:
 
@@ -13,9 +10,9 @@ public:
 	 * @param numLEDsIn Number of lights of the strip to be turned on
    *                  REQUIRES: numLEDsIn <= 300
 	 */
-  void init(int numLEDsIn) {
+  void init(int ledPinIn, int numLEDsIn) {
     numLEDs = numLEDsIn;
-    FastLED.addLeds<NEOPIXEL, DATA_PIN>(LEDs, numLEDs);
+    FastLED.addLeds<NEOPIXEL, ledPinIn>(LEDs, numLEDs);
 
     setRGBColor(50, 50, 50);
   }

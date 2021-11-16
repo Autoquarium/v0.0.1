@@ -59,6 +59,8 @@ int previous_feed_time = -1;
 
 
 // LED array
+//#define DATA_PIN 6 // for Arduino
+#define DATA_PIN 22 // for ESP32
 LED_Array leds;
 char currLEDcolor = 'W';
 
@@ -245,7 +247,7 @@ void setup() {
   si.init(SERVO_PIN);
 
   // init LEDs
-  leds.init(25);
+  leds.init(DATA_PIN, 25);
 
   // init LCD
   lcd.init(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
