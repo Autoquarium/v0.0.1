@@ -39,6 +39,8 @@ void DFRobot_ESP_PH::init(int PH_PIN_in, float ESPADC_in, int ESPVOLTAGE_in) {
 
 float DFRobot_ESP_PH::getPH(float temp_in) {
     float voltage = analogRead(PH_PIN) / ESPADC * ESPVOLTAGE; // read the voltage
+    this->_voltage = voltage;
+    this->_temperature = temp_in;
     return readPH(voltage, temp_in); // convert voltage to pH with temperature compensation
 }
 
@@ -96,22 +98,50 @@ float DFRobot_ESP_PH::readPH(float voltage, float temperature)
     return _phValue;
 }
 
-void DFRobot_ESP_PH::calibration(float voltage, float temperature, char *cmd)
+void DFRobot_ESP_PH::calibration(char *cmd)
 {
-    this->_voltage = voltage;
-    this->_temperature = temperature;
+//    this->_voltage = voltage;
+//    this->_temperature = temperature;
     strupr(cmd);
     phCalibration(cmdParse(cmd)); // if received Serial CMD from the serial monitor, enter into the calibration mode
 }
 
-void DFRobot_ESP_PH::calibration(float voltage, float temperature)
+void DFRobot_ESP_PH::calibration()
 {
-    this->_voltage = voltage;
-    this->_temperature = temperature;
+//    this->_voltage = voltage;
+//    this->_temperature = temperature;
     if (cmdSerialDataAvailable() > 0)
     {
         phCalibration(cmdParse()); // if received Serial CMD from the serial monitor, enter into the calibration mode
     }
+}
+
+void DFRobot_ESP_PH::manualCalibration(){
+  int v7 = 0, v4 = 0;
+  if(Serial.available() > 0){
+    String pH_cmd = Serial.readString();
+    if(pH_cmd == "MANCALPH"){
+      Serial.println("Manual Calibration: Please enter the voltage value for pH 4");
+      while(!Serial.available()){}
+      pH_cmd = Serial.readString();
+      if(pH_cmd == "EXIT"){
+        return;
+      }
+      else{
+        v7 = pH_cmd.toInt();
+      }
+      Serial.println("Manual Calibration: Please enter the voltage value for pH 7");
+      while(!Serial.available()){}
+      pH_cmd = Serial.readString();
+      if(pH_cmd == "EXIT"){
+        return;
+      }
+      else{
+        v4 = pH_cmd.toInt();
+      }
+      manualCalibration(v7, v4);
+    }
+  }
 }
 
 boolean DFRobot_ESP_PH::cmdSerialDataAvailable()

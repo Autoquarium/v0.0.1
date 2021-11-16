@@ -9,10 +9,23 @@ public:
 	 * 
 	 * @param numLEDsIn Number of lights of the strip to be turned on
    *                  REQUIRES: numLEDsIn <= 300
+   * @param ledPinIn IO pin that data will be sent across to control the LEDs
 	 */
-  void init(int ledPinIn, int numLEDsIn) {
+  void init(const int ledPinIn, int numLEDsIn) {
     numLEDs = numLEDsIn;
-    FastLED.addLeds<NEOPIXEL, ledPinIn>(LEDs, numLEDs);
+     switch (ledPinIn) {
+    case 22:
+      FastLED.addLeds<NEOPIXEL, 22>(LEDs, numLEDs);
+      break;
+
+    case 23:
+      FastLED.addLeds<NEOPIXEL, 23>(LEDs, numLEDs);
+      break;
+
+    default:
+      Serial.println("Unsupported Pin");
+      break;
+  }
 
     setRGBColor(50, 50, 50);
   }

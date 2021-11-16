@@ -271,7 +271,7 @@ void setup() {
 
 /**
  * @brief main loop 
- * more information here: https://docs.google.com/document/d/1eHEfdXb2m5zrR4cIb2Fecp_S6VAcF3OrBk4lCq4g3QM/edit
+ * more information here: https://docs.google.com/document/d/1eHEfdXb2m5zrR4cIb2Fecp_S6VAcF3OrBk4lCq4g3QM
  * 
  */
 void loop() {
@@ -291,7 +291,7 @@ void loop() {
     Serial.println(tempVal);
     
     // get water pH
-    float pHVal = ph.getPH(tempVal);
+    float pHVal = ph.getPH((tempVal-32)/1.8); //convert temperature to celcius
     Serial.print("pH sensor: ");
     Serial.println(pHVal);
     
@@ -317,6 +317,10 @@ void loop() {
   if (dynamic_lighting) {
     leds.updateDynamicColor(current_time);
   }
+
+  // look for pH calibration serial input
+  ph.calibration();
+  ph.manualCalibration();
   
   // look for incoming commands
   wiqtt.loop(); // needs to be called every 15 seconds at least
