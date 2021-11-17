@@ -6,7 +6,6 @@
 
 #include <Adafruit_GFX.h> 
 #include <Adafruit_ILI9341.h> 
-#include <Wire.h>
 #include  <SPI.h>
 
 
@@ -24,7 +23,6 @@ public:
 		tft->setRotation(0);            
 		tft->fillScreen(ILI9341_BLACK);
   
-		Wire.begin();
   		printText("AUTOQUARIUM", water_blue,20,20,3);
   		printText("pH", white,25,90,3);
   		printText("Temp", white,150,90,3);

@@ -31,12 +31,12 @@ int VIRTUAL_SENSOR = 0;
 DFRobot_ESP_PH ph;
 
 // LCD pins
-#define TFT_MISO 4
+#define TFT_MISO 19
 #define TFT_CLK 18 
-#define TFT_MOSI 19   
-#define TFT_DC 21
-#define TFT_RST 22
-#define TFT_CS 23
+#define TFT_MOSI 23   
+#define TFT_DC 21 //25  
+#define TFT_RST 5
+#define TFT_CS 22 //26
         
 
 int num_of_fish = 5;
