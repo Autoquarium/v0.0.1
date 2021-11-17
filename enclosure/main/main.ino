@@ -13,7 +13,7 @@
 unsigned long prev_time = 0;
 long read_interval = 1; // in minutes
 bool dynamic_lighting = false;
-bool send_alert = true;
+bool send_alert = false;
 
 // danger cutoff values
 #define MAX_TEMP 90
@@ -27,31 +27,33 @@ int VIRTUAL_SENSOR = 0;
 // pH sensor
 #define ESPADC 4096.0   //the esp Analog Digital Convertion value
 #define ESPVOLTAGE 3300 //the esp voltage supply value
-#define PH_PIN 35    //pH sensor gpio pin
+#define PH_PIN 4    //pH sensor gpio pin
 DFRobot_ESP_PH ph;
 
 // LCD pins
-#define TFT_DC 17
-#define TFT_CS 15
-#define TFT_RST 5
-#define TFT_MISO 19         
-#define TFT_MOSI 23           
+#define TFT_MISO 4
 #define TFT_CLK 18 
+#define TFT_MOSI 19   
+#define TFT_DC 21
+#define TFT_RST 22
+#define TFT_CS 23
+        
+
 int num_of_fish = 5;
 LCD lcd;
 TempSensor temperature;
 
 // ir sensor
-#define IR_PIN 34 //TODO change to ESP pins
-#define LED_PIN 26 //TODO change to ESP pins
+#define IR_PIN 32 //TODO change to ESP pins
+//#define LED_PIN 26 //TODO change to ESP pins
 #define IR_THRESHOLD 50 //TODO change to reflect values in enclosure
 ir_sensor ir;
 
 //Temperature chip
-int DS18S20_Pin = 4; //DS18S20 Signal pin on digital 2
+int DS18S20_Pin = 13; //DS18S20 Signal pin on digital 2
 
 // servo
-#define SERVO_PIN 32
+#define SERVO_PIN 33
 #define DELAY_BETWEEN_ROTATION 1000
 #define MIN_FEED_INTERVAL 1
 Servo_Interface si;
@@ -60,7 +62,7 @@ int previous_feed_time = -1;
 
 // LED array
 //#define DATA_PIN 6 // for Arduino
-#define DATA_PIN 22 // for ESP32
+#define DATA_PIN 2 // for ESP32
 LED_Array leds;
 char currLEDcolor = 'W';
 
@@ -83,6 +85,7 @@ int   daylightOffset_sec = 3600;  //Replace with your daylight offset (seconds) 
 void checkForChangeLED();
 int getTime();
 int getTimeDiff(int time1, int time2);
+void dangerValueCheck(float tempVal, float pHVal, int foodLevel );
 
 
 /**
@@ -241,7 +244,7 @@ void setup() {
   temperature.init(DS18S20_Pin);  
 
   // init ir sensor
-  ir.init(IR_PIN, LED_PIN, IR_THRESHOLD);
+  ir.init(IR_PIN, /*LED_PIN,*/ IR_THRESHOLD);
 
   // init servo
   si.init(SERVO_PIN);
