@@ -22,6 +22,10 @@ public:
       FastLED.addLeds<NEOPIXEL, 23>(LEDs, numLEDs);
       break;
 
+    case 2:
+      FastLED.addLeds<NEOPIXEL, 2>(LEDs, numLEDs);
+      break;
+
     default:
       Serial.println("Unsupported Pin");
       break;
