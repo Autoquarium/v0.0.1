@@ -146,7 +146,29 @@ void DFRobot_ESP_PH::calibration(char *cmd) {
 void DFRobot_ESP_PH::calibration() {
     if (cmdSerialDataAvailable() > 0)
     {
-        phCalibration(cmdParse()); // if received Serial CMD from the serial monitor, enter into the calibration mode
+      if(strstr(this->_cmdReceivedBuffer, "MANCALPH") != NULL){
+        int v7 = 0, v4 = 0;
+        Serial.println("Manual Calibration: Please enter the voltage value for pH 4");
+        while(cmdSerialDataAvailable() <= 0){}
+        if(strstr(this->_cmdReceivedBuffer, "EXIT") != NULL){
+          return;
+        }
+        else{
+          v7 = atoi(_cmdReceivedBuffer);
+        }
+        Serial.println("Manual Calibration: Please enter the voltage value for pH 7");
+        while(cmdSerialDataAvailable() <= 0){}
+        if(strstr(this->_cmdReceivedBuffer, "EXIT") != NULL){
+          return;
+        }
+        else{
+          v4 = atoi(_cmdReceivedBuffer);
+        }
+        manualCalibration(v7, v4);
+      }
+      else{
+          phCalibration(cmdParse()); // if received Serial CMD from the serial monitor, enter into the calibration mode
+      }
     }
 }
 /**
@@ -154,30 +176,9 @@ void DFRobot_ESP_PH::calibration() {
  * 
  */
 void DFRobot_ESP_PH::manualCalibration() {
-  int v7 = 0, v4 = 0;
-  if(Serial.available() > 0){
-    String pH_cmd = Serial.readString();
-    if(pH_cmd == "MANCALPH"){
-      Serial.println("Manual Calibration: Please enter the voltage value for pH 4");
-      while(!Serial.available()){}
-      pH_cmd = Serial.readString();
-      if(pH_cmd == "EXIT"){
-        return;
-      }
-      else{
-        v7 = pH_cmd.toInt();
-      }
-      Serial.println("Manual Calibration: Please enter the voltage value for pH 7");
-      while(!Serial.available()){}
-      pH_cmd = Serial.readString();
-      if(pH_cmd == "EXIT"){
-        return;
-      }
-      else{
-        v4 = pH_cmd.toInt();
-      }
-      manualCalibration(v7, v4);
-    }
+  
+  if(cmdSerialDataAvailable() > 0){
+    
   }
 }
 
@@ -362,9 +363,9 @@ void DFRobot_ESP_PH::manualCalibration(float voltage7, float voltage4){
 	preferences.begin("pHVals", false);
 	
 	preferences.putFloat("voltage7", this->_neutralVoltage);
-	Serial.print(F("PH 7 Calibration value saved"));
+	Serial.println(F("PH 7 Calibration value saved"));
 	preferences.putFloat("voltage4", this->_acidVoltage);
-	Serial.print(F("PH 4 Calibration value saved"));
+	Serial.println(F("PH 4 Calibration value saved"));
 	
 	preferences.end();
 }

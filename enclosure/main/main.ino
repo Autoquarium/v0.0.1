@@ -27,7 +27,7 @@ int VIRTUAL_SENSOR = 0;
 // pH sensor
 #define ESPADC 4096.0   //the esp Analog Digital Convertion value
 #define ESPVOLTAGE 3300 //the esp voltage supply value
-#define PH_PIN 4    //pH sensor gpio pin
+#define PH_PIN 34    //pH sensor gpio pin
 DFRobot_ESP_PH ph;
 
 // LCD pins
@@ -294,7 +294,7 @@ void loop() {
     Serial.println(tempVal);
     
     // get water pH
-    float pHVal = ph.getPH((tempVal-32)/1.8); //convert temperature to celcius
+    float pHVal = ph.getPH(/*(tempVal-32)/1.8*/25); //convert temperature to celcius
     Serial.print("pH sensor: ");
     Serial.println(pHVal);
     
@@ -323,7 +323,7 @@ void loop() {
 
   // look for pH calibration serial input
   ph.calibration();
-  ph.manualCalibration();
+  //ph.manualCalibration();
   
   // look for incoming commands
   wiqtt.loop(); // needs to be called every 15 seconds at least
