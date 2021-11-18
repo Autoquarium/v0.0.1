@@ -32,7 +32,7 @@
 Preferences preferences;
 
 /**
- * @brief Initializes the pH sensor/hardware
+ * @brief Initializes the pH sensor/hardware and assigns it the proper pins
  * 
  * @param PH_PIN_in Input for pH sensor on ESP32
  * @param ESPADC_in Input for ADC from ESP32
@@ -88,7 +88,7 @@ float DFRobot_ESP_PH::get_neutralVoltage(){
 }
 
 /**
- * @brief 
+ * @brief This is the startup function for the pH sensor. It gets everything ready so that the sensor can actually start to calibrate/read values
  * 
  */
 void DFRobot_ESP_PH::begin()
@@ -111,6 +111,13 @@ void DFRobot_ESP_PH::begin()
 	preferences.end();
 }
 
+/**
+ * @brief Reads pH level of a given solution/water in fish tank
+ * 
+ * @param voltage // TODO
+ * @param temperature temperature of the water
+ * @return float 
+ */
 float DFRobot_ESP_PH::readPH(float voltage, float temperature)
 {
     // Serial.print("_neutralVoltage:");
@@ -127,6 +134,11 @@ float DFRobot_ESP_PH::readPH(float voltage, float temperature)
     return _phValue;
 }
 
+/**
+ * @brief calibrates the pH sensor given a remote command
+ * 
+ * @param cmd calibration command
+ */
 void DFRobot_ESP_PH::calibration(char *cmd)
 {
 //    this->_voltage = voltage;
@@ -135,6 +147,11 @@ void DFRobot_ESP_PH::calibration(char *cmd)
     phCalibration(cmdParse(cmd)); // if received Serial CMD from the serial monitor, enter into the calibration mode
 }
 
+
+/**
+ * @brief tries to search a remote command and calibrates the pH sensor if found
+ * 
+ */
 void DFRobot_ESP_PH::calibration()
 {
 //    this->_voltage = voltage;
@@ -144,7 +161,10 @@ void DFRobot_ESP_PH::calibration()
         phCalibration(cmdParse()); // if received Serial CMD from the serial monitor, enter into the calibration mode
     }
 }
-
+/**
+ * @brief manual calibration function
+ * 
+ */
 void DFRobot_ESP_PH::manualCalibration(){
   int v7 = 0, v4 = 0;
   if(Serial.available() > 0){
@@ -173,6 +193,11 @@ void DFRobot_ESP_PH::manualCalibration(){
   }
 }
 
+/**
+ * @brief checks to see whether serial data is/is not available
+ * 
+ * @return boolean
+ */
 boolean DFRobot_ESP_PH::cmdSerialDataAvailable()
 {
     char cmdReceivedChar;
@@ -201,6 +226,12 @@ boolean DFRobot_ESP_PH::cmdSerialDataAvailable()
     return false;
 }
 
+/**
+ * @brief parses a remote command
+ * 
+ * @param cmd input command
+ * @return byte 
+ */
 byte DFRobot_ESP_PH::cmdParse(const char *cmd)
 {
     byte modeIndex = 0;
@@ -219,6 +250,11 @@ byte DFRobot_ESP_PH::cmdParse(const char *cmd)
     return modeIndex;
 }
 
+/**
+ * @brief recieves a command and parses it
+ * 
+ * @return byte 
+ */
 byte DFRobot_ESP_PH::cmdParse()
 {
     byte modeIndex = 0;
