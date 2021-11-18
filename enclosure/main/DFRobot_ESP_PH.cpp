@@ -31,18 +31,34 @@
 
 Preferences preferences;
 
+/**
+ * @brief Initializes the pH sensor/hardware
+ * 
+ * @param PH_PIN_in Input for pH sensor on ESP32
+ * @param ESPADC_in Input for ADC from ESP32
+ * @param ESPVOLTAGE_in Input for ESP32 Voltage source
+ */
 void DFRobot_ESP_PH::init(int PH_PIN_in, float ESPADC_in, int ESPVOLTAGE_in) {
     PH_PIN = PH_PIN_in;
     ESPADC = ESPADC_in;
     ESPVOLTAGE = ESPVOLTAGE_in;
 }
 
+/**
+ * @brief Retrieves the pH value of the tank/solution
+ * 
+ * @param temp_in Temperature of tank(in Celsius?)
+ * @return float
+ */
 float DFRobot_ESP_PH::getPH(float temp_in) {
     float voltage = analogRead(PH_PIN) / ESPADC * ESPVOLTAGE; // read the voltage
     return readPH(voltage, temp_in); // convert voltage to pH with temperature compensation
 }
 
-
+/**
+ * @brief Constructor that assigns default(neutral) values to pH sensor metrics
+ * 
+ */
 DFRobot_ESP_PH::DFRobot_ESP_PH()
 {
     this->_temperature = 25.0;
@@ -52,14 +68,27 @@ DFRobot_ESP_PH::DFRobot_ESP_PH()
     this->_voltage = 1500.0;
 }
 
+/**
+ * @brief Destructor
+ * 
+ */
 DFRobot_ESP_PH::~DFRobot_ESP_PH()
 {
 }
 
+/**
+ * @brief Gets the neutral voltage of tank/solution
+ * 
+ * @return float 
+ */
 float DFRobot_ESP_PH::get_neutralVoltage(){
 	return this->_neutralVoltage;
 }
 
+/**
+ * @brief 
+ * 
+ */
 void DFRobot_ESP_PH::begin()
 {
 	preferences.begin("pHVals", false);
