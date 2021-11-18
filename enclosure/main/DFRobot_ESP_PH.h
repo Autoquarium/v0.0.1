@@ -68,7 +68,7 @@ public:
      */
     float readPH(float voltage, float temperature); // voltage to pH value, with temperature compensation
     void begin();            	//initialization
-	  float get_neutralVoltage();
+	float get_neutralVoltage();
 
     
     // added below

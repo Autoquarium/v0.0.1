@@ -118,19 +118,11 @@ void DFRobot_ESP_PH::begin()
  * @param temperature temperature of the water
  * @return float 
  */
-float DFRobot_ESP_PH::readPH(float voltage, float temperature)
-{
-    // Serial.print("_neutralVoltage:");
-    // Serial.print(this->_neutralVoltage);
-    // Serial.print(", _acidVoltage:");
-    // Serial.print(this->_acidVoltage);
-    float slope = (7.0 - 4.0) / ((this->_neutralVoltage - 1500.0) / 3.0 - (this->_acidVoltage - 1500.0) / 3.0); // two point: (_neutralVoltage,7.0),(_acidVoltage,4.0)
+float DFRobot_ESP_PH::readPH(float voltage, float temperature) {
+
+    float slope = (7.0 - 4.0) / ((this->_neutralVoltage - 1500.0) / 3.0 - (this->_acidVoltage - 1500.0) / 3.0);
     float intercept = 7.0 - slope * (this->_neutralVoltage - 1500.0) / 3.0;
-    // Serial.print(", slope:");
-    // Serial.print(slope);
-    // Serial.print(", intercept:");
-    // Serial.println(intercept);
-    this->_phValue = slope * (voltage - 1500.0) / 3.0 + intercept; //y = k*x + b
+    this->_phValue = slope * (voltage - 1500.0) / 3.0 + intercept;
     return _phValue;
 }
 
@@ -139,12 +131,11 @@ float DFRobot_ESP_PH::readPH(float voltage, float temperature)
  * 
  * @param cmd calibration command
  */
-void DFRobot_ESP_PH::calibration(char *cmd)
-{
-//    this->_voltage = voltage;
-//    this->_temperature = temperature;
+void DFRobot_ESP_PH::calibration(char *cmd) {
     strupr(cmd);
-    phCalibration(cmdParse(cmd)); // if received Serial CMD from the serial monitor, enter into the calibration mode
+
+    // if received Serial CMD from the serial monitor, enter into the calibration mode
+    phCalibration(cmdParse(cmd));
 }
 
 
@@ -152,10 +143,7 @@ void DFRobot_ESP_PH::calibration(char *cmd)
  * @brief tries to search a remote command and calibrates the pH sensor if found
  * 
  */
-void DFRobot_ESP_PH::calibration()
-{
-//    this->_voltage = voltage;
-//    this->_temperature = temperature;
+void DFRobot_ESP_PH::calibration() {
     if (cmdSerialDataAvailable() > 0)
     {
         phCalibration(cmdParse()); // if received Serial CMD from the serial monitor, enter into the calibration mode
@@ -165,7 +153,7 @@ void DFRobot_ESP_PH::calibration()
  * @brief manual calibration function
  * 
  */
-void DFRobot_ESP_PH::manualCalibration(){
+void DFRobot_ESP_PH::manualCalibration() {
   int v7 = 0, v4 = 0;
   if(Serial.available() > 0){
     String pH_cmd = Serial.readString();
@@ -196,7 +184,7 @@ void DFRobot_ESP_PH::manualCalibration(){
 /**
  * @brief checks to see whether serial data is/is not available
  * 
- * @return boolean
+ * @return boolean True if data is available, False otherwise
  */
 boolean DFRobot_ESP_PH::cmdSerialDataAvailable()
 {
@@ -230,10 +218,9 @@ boolean DFRobot_ESP_PH::cmdSerialDataAvailable()
  * @brief parses a remote command
  * 
  * @param cmd input command
- * @return byte 
+ * @return byte index mode
  */
-byte DFRobot_ESP_PH::cmdParse(const char *cmd)
-{
+byte DFRobot_ESP_PH::cmdParse(const char *cmd) {
     byte modeIndex = 0;
     if (strstr(cmd, "ENTERPH") != NULL)
     {
@@ -253,10 +240,9 @@ byte DFRobot_ESP_PH::cmdParse(const char *cmd)
 /**
  * @brief recieves a command and parses it
  * 
- * @return byte 
+ * @return byte index mode
  */
-byte DFRobot_ESP_PH::cmdParse()
-{
+byte DFRobot_ESP_PH::cmdParse() {
     byte modeIndex = 0;
     if (strstr(this->_cmdReceivedBuffer, "ENTERPH") != NULL)
     {
@@ -273,8 +259,12 @@ byte DFRobot_ESP_PH::cmdParse()
     return modeIndex;
 }
 
-void DFRobot_ESP_PH::phCalibration(byte mode)
-{
+/**
+ * @brief Calibrates pH sensor based on provided mode
+ * 
+ * @param mode the mode from cmdparse
+ */
+void DFRobot_ESP_PH::phCalibration(byte mode) {
     char *receivedBufferPtr;
     static boolean phCalibrationFinish = 0;
     static boolean enterCalibrationFlag = 0;
@@ -362,6 +352,12 @@ void DFRobot_ESP_PH::phCalibration(byte mode)
     }
 }
 
+/**
+ * @brief Manually calibrate the pH sensor 
+ * 
+ * @param voltage7 voltage at pH 7
+ * @param voltage4 voltage at pH 4
+ */
 void DFRobot_ESP_PH::manualCalibration(float voltage7, float voltage4){
 	preferences.begin("pHVals", false);
 	

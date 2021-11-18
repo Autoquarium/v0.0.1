@@ -146,7 +146,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
       int r = atoi(strtok(buff, ","));
       int g = atoi(strtok(NULL, ","));
       int b = atoi(strtok(NULL, ","));
-      leds.setRGBColor(r, g, b);
+      leds.changeColor(r, g, b);
     }
 
     
