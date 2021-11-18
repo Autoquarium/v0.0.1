@@ -96,18 +96,6 @@ public:
     currentRGB = color;
   }
 
-  /**
-	 * @brief Changes the brightness according to a 0-100 scale
-	 * 
-	 * @param level REQUIRES: 0 <= level <= 100
-   *              Note: perhaps change to 0 -> 10?
-	 */
-  void setBrightness(int level) {
-    // Using a ratio scale based on the current RGB values
-    // int ratio[3] = {};
-    // CRGB maxBrightnessRGB = {};
-    // CRGB minBrightnessRGB = {};
-  }
 
   /**
 	 * @brief Transitions the color of the LEDs from RGB1 to RGB2
