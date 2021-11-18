@@ -30,12 +30,46 @@ class DFRobot_ESP_PH
 public:
     DFRobot_ESP_PH();
     ~DFRobot_ESP_PH();
-    void calibration(float voltage, float temperature, char *cmd); //calibration by Serial CMD
-    void calibration(float voltage, float temperature);
+   /**
+     * @brief Calibrate the calibration data
+     *
+     * @param cmd         : ENTERPH -> enter the PH calibration mode
+     *                      CALPH   -> calibrate with the standard buffer solution, two buffer solutions(4.0 and 7.0) will be automaticlly recognized
+     *                      EXITPH  -> save the calibrated parameters and exit from PH calibration mode
+     */
+    void calibration(char *cmd); //calibration by Serial CMD
+    /**
+     * @brief Runs calibration sequence for pH sensor
+     *        If correct command is received, enters calibration mode
+     */
+    void calibration();
+    /**
+     * @brief Runs manual calibration sequence for pH sensor
+     *        If correct command is received, enters manual calibration mode.
+     *        MANCALPH -> enter the PH manual calibration mode
+     *        EXIT -> Exit without saving
+     *        Calibration uses while loops to wait for incoming data, so it may cause other processes to misbehave.
+     */
+    void manualCalibration();
+    /**
+     * @brief Runs calibration sequence for pH sensor
+     *        If correct command is received, enters calibration mode
+     * 
+     * @param voltage7 Voltage value of pH sensor when submerged in pH 7 buffer solution
+     * @param voltage4 Voltage value of pH sensor when submerged in pH 4 buffer solution
+     */
+    void manualCalibration(float voltage7, float voltage4); //manually input 2-point calibration values
+    /**
+     * @brief Converts voltage read by the pH sensor into pH value
+     *        Uses temperature measurement for a more accurate conversion
+     * 
+     * @param voltage Voltage value of pH sensor
+     * @param temperature Temperature in degress celcius
+     */
     float readPH(float voltage, float temperature); // voltage to pH value, with temperature compensation
     void begin();            	//initialization
-	float get_neutralVoltage();
-	void manualCalibration(float voltage7, float voltage4); //manually input 2-point calibration values
+	  float get_neutralVoltage();
+
     
     // added below
     void init(int PH_PIN_in, float ESPADC_in, int ESPVOLTAGE_in);

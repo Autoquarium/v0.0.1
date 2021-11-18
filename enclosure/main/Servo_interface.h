@@ -27,6 +27,7 @@ public:
     goToPosition(180);
     delay(delayIn);
     goToPosition(0);
+    delay(delayIn);
   }
 
   /**

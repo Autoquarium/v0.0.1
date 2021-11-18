@@ -27,49 +27,52 @@ int VIRTUAL_SENSOR = 0;
 // pH sensor
 #define ESPADC 4096.0   //the esp Analog Digital Convertion value
 #define ESPVOLTAGE 3300 //the esp voltage supply value
-#define PH_PIN 35    //pH sensor gpio pin
+#define PH_PIN 4    //pH sensor gpio pin
 DFRobot_ESP_PH ph;
 
 // LCD pins
-#define TFT_DC 17
-#define TFT_CS 15
-#define TFT_RST 5
-#define TFT_MISO 19         
-#define TFT_MOSI 23           
+#define TFT_MISO 19
 #define TFT_CLK 18 
+#define TFT_MOSI 23   
+#define TFT_DC 21 //25  
+#define TFT_RST 5
+#define TFT_CS 22 //26
+        
+
 int num_of_fish = 5;
 LCD lcd;
 TempSensor temperature;
 
 // ir sensor
-#define IR_PIN 34 //TODO change to ESP pins
-#define LED_PIN 26 //TODO change to ESP pins
+#define IR_PIN 32 //TODO change to ESP pins
+//#define LED_PIN 26 //TODO change to ESP pins
 #define IR_THRESHOLD 50 //TODO change to reflect values in enclosure
 ir_sensor ir;
 
 //Temperature chip
-int DS18S20_Pin = 4; //DS18S20 Signal pin on digital 2
+int DS18S20_Pin = 13; //DS18S20 Signal pin on digital 2
 
 // servo
-#define SERVO_PIN 32
+#define SERVO_PIN 33
 #define DELAY_BETWEEN_ROTATION 1000
-#define MIN_FEED_INTERVAL 1200
+#define MIN_FEED_INTERVAL 1
 Servo_Interface si;
 int previous_feed_time = -1;
 
 
 // LED array
+//#define DATA_PIN 6 // for Arduino
+#define DATA_PIN 2 // for ESP32
 LED_Array leds;
 char currLEDcolor = 'W';
 
 
 // MQTT client
-char* wifi_SSID = "Verizon-SM-G930V-A5BE"; // -- need to persist boots
-char* wifi_PWD = "mtpg344#"; // -- need to persist boots
+char* wifi_SSID = "Fishwifi";//"OnePlus"; //"Verizon-SM-G930V-A5BE"; // -- need to persist boots
+char* wifi_PWD = "fishfood";//"1234abcd";//"mtpg344#"; // -- need to persist boots
 FishMqtt wiqtt;
 
 // push Alert info
-String alert_token  = "akiafy9jms26ojnx53bw5vvivj1s4v";
 String alert_usr   = "uaeiijpxfayt5grxg85w97wkeu7gxq"; // -- need to persist boot
 
 // getting time
@@ -82,6 +85,7 @@ int   daylightOffset_sec = 3600;  //Replace with your daylight offset (seconds) 
 void checkForChangeLED();
 int getTime();
 int getTimeDiff(int time1, int time2);
+void dangerValueCheck(float tempVal, float pHVal, int foodLevel );
 
 
 /**
@@ -163,7 +167,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     else if (!strcmp(topic, "autoq/cmds/settings/alert")) {
         // update rate
         int val = atoi(buff);
-        send_alert = val == 1;
+        // send_alert = val == 1;
         Serial.println("new alert setting");
     }
     
@@ -240,13 +244,13 @@ void setup() {
   temperature.init(DS18S20_Pin);  
 
   // init ir sensor
-  ir.init(IR_PIN, LED_PIN, IR_THRESHOLD);
+  ir.init(IR_PIN, /*LED_PIN,*/ IR_THRESHOLD);
 
   // init servo
   si.init(SERVO_PIN);
 
   // init LEDs
-  leds.init(200);
+  leds.init(DATA_PIN, 25);
 
   // init LCD
   lcd.init(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
@@ -270,7 +274,7 @@ void setup() {
 
 /**
  * @brief main loop 
- * more information here: https://docs.google.com/document/d/1eHEfdXb2m5zrR4cIb2Fecp_S6VAcF3OrBk4lCq4g3QM/edit
+ * more information here: https://docs.google.com/document/d/1eHEfdXb2m5zrR4cIb2Fecp_S6VAcF3OrBk4lCq4g3QM
  * 
  */
 void loop() {
@@ -290,7 +294,7 @@ void loop() {
     Serial.println(tempVal);
     
     // get water pH
-    float pHVal = ph.getPH(tempVal);
+    float pHVal = ph.getPH((tempVal-32)/1.8); //convert temperature to celcius
     Serial.print("pH sensor: ");
     Serial.println(pHVal);
     
@@ -316,6 +320,10 @@ void loop() {
   if (dynamic_lighting) {
     leds.updateDynamicColor(current_time);
   }
+
+  // look for pH calibration serial input
+  ph.calibration();
+  ph.manualCalibration();
   
   // look for incoming commands
   wiqtt.loop(); // needs to be called every 15 seconds at least
@@ -330,6 +338,8 @@ void loop() {
  * @param foodLevel food level
  */
 void dangerValueCheck(float tempVal, float pHVal, int foodLevel ) {
+
+    Serial.println("checking danger values");
 
     String msg;
 

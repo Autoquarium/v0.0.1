@@ -1,8 +1,5 @@
 #include <FastLED.h>
 
-//#define DATA_PIN 6 // for Arduino
-#define DATA_PIN 22 // for ESP32
-
 class LED_Array {
 public:
 
@@ -12,10 +9,27 @@ public:
 	 * 
 	 * @param numLEDsIn Number of lights of the strip to be turned on
    *                  REQUIRES: numLEDsIn <= 300
+   * @param ledPinIn IO pin that data will be sent across to control the LEDs
 	 */
-  void init(int numLEDsIn) {
+  void init(const int ledPinIn, int numLEDsIn) {
     numLEDs = numLEDsIn;
-    FastLED.addLeds<NEOPIXEL, DATA_PIN>(LEDs, numLEDs);
+     switch (ledPinIn) {
+    case 22:
+      FastLED.addLeds<NEOPIXEL, 22>(LEDs, numLEDs);
+      break;
+
+    case 23:
+      FastLED.addLeds<NEOPIXEL, 23>(LEDs, numLEDs);
+      break;
+
+    case 2:
+      FastLED.addLeds<NEOPIXEL, 2>(LEDs, numLEDs);
+      break;
+
+    default:
+      Serial.println("Unsupported Pin");
+      break;
+  }
 
     setRGBColor(50, 50, 50);
   }
@@ -128,6 +142,18 @@ public:
   }
 
   /**
+   * @brief Slowly transitions from current color to new color
+   * 
+   * @param r REQUIRES: 0 <= r1 <= 255
+   * @param g REQUIRES: 0 <= r1 <= 255
+   * @param b REQUIRES: 0 <= r1 <= 255
+   */
+  void changeColor(int r, int g, int b) {
+    colorTransition(currentRGB, CRGB(r, g, b), 5000);
+  }
+
+
+  /**
 	 * @brief Updates color blend based on the time of day
    *        Mimics a sunrise-day-sunset-night cycle
    *
@@ -147,7 +173,7 @@ public:
     double dynamicBlendPercent;
 
     if (currentTime < sunriseTStart) { /* NIGHT */
-      setRGBColor(night);
+      colorTransition(currentRGB, night, 5000);
       return;
     }
     else if (currentTime <= sunriseTEnd) { /* NIGHT -> SUNRISE */
@@ -161,7 +187,7 @@ public:
       color2 = day;
     }
     else if (currentTime < sunsetTStart) { /* DAY */
-      setRGBColor(day);
+      colorTransition(currentRGB, day, 5000);
       return;
     }
     else if (currentTime < sunsetTEnd) { /* DAY -> SUNSET */
@@ -175,11 +201,10 @@ public:
       color2 = night;
     }
     else { /* NIGHT */
-      setRGBColor(night);
+      colorTransition(currentRGB, night, 5000);
       return;
     }
-    
-    setRGBColor(blend(color1, color2, dynamicBlendPercent));
+    colorTransition(currentRGB, blend(color1, color2, dynamicBlendPercent), 5000);
     
   }
 
