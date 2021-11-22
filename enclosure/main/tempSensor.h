@@ -1,9 +1,15 @@
-
 #include <OneWire.h> 
 
 class TempSensor {
+  
+  private:
+    OneWire *ds;
 
   public:
+    /**
+     * @brief Construct a new Temp Sensor object
+     * 
+     */
     TempSensor() { }
   
     /**
@@ -11,8 +17,7 @@ class TempSensor {
       * 
       * @param pin Sets the pin that sensor reads from
       */
-    void init(int pin)
-    {
+    void init(int pin) {
       pinMode(pin, INPUT);
       ds = new OneWire(pin);
     } 
@@ -22,8 +27,7 @@ class TempSensor {
       * 
       * @return float value of the temperature in Celsius 
       */
-    float getTemp()
-    {
+    float getTemp() {
       byte data[12];
       byte addr[8];
 
@@ -70,7 +74,4 @@ class TempSensor {
 
       return (TemperatureSum * 18 + 5)/10 + 32;
     }
-
-  private:
-    OneWire *ds;
 };
