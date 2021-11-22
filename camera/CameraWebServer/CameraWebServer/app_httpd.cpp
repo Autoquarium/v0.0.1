@@ -620,7 +620,7 @@ void startCameraServer(){
     };
 
    httpd_uri_t stream_uri = {
-        .uri       = "/",
+        .uri       = "/stream",
         .method    = HTTP_GET,
         .handler   = stream_handler,
         .user_ctx  = NULL
