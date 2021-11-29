@@ -37,7 +37,7 @@ String index_html = "<meta charset=\"utf-8\"/>\n" \
                     "text-align: center;\n" \
                     "min-height: 100vh;}\n" \
                     "</style>\n" \
-                    "<body bgcolor=\"#000000\"><div id=\"content\"><h2 style=\"color:#ffffff\">Autoquarium LIVE</h2><img src=\"video\"></div></body>";
+                    "<body bgcolor=\"#2986cc\"><div id=\"content\"><h2 style=\"color:#000000\">Autoquarium LIVE</h2><img src=\"video\"></div></body>";
  
 void configCamera(){
   camera_config_t config;
@@ -62,9 +62,9 @@ void configCamera(){
   config.xclk_freq_hz = 20000000; //EXPERIMENTAL: Set to 16MHz on ESP32-S2 or ESP32-S3 to enable EDMA mode
   config.pixel_format = PIXFORMAT_JPEG; //YUV422,GRAYSCALE,RGB565,JPEG
  
-  config.frame_size = FRAMESIZE_UXGA; //QQVGA-QXGA Do not use sizes above QVGA when not JPEG
-  config.jpeg_quality = 30; //0-63 lower number means higher quality
-  config.fb_count = 2; //if more than one, i2s runs in continuous mode. Use only with JPEG
+  config.frame_size = FRAMESIZE_QVGA; //QQVGA-QXGA Do not use sizes above QVGA when not JPEG
+  config.jpeg_quality = 40; //0-63 lower number means higher quality
+  config.fb_count = 1; //if more than one, i2s runs in continuous mode. Use only with JPEG
  
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
