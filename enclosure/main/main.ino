@@ -250,7 +250,7 @@ void setup() {
   si.init(SERVO_PIN);
 
   // init LEDs
-  leds.init(DATA_PIN, 25);
+  leds.init(DATA_PIN, 64);
 
   // init LCD
   lcd.init(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
@@ -294,7 +294,7 @@ void loop() {
     Serial.println(tempVal);
     
     // get water pH
-    float pHVal = ph.getPH(/*(tempVal-32)/1.8*/25); //convert temperature to celcius
+    float pHVal = ph.getPH((tempVal-32)/1.8); //convert temperature to celcius
     Serial.print("pH sensor: ");
     Serial.println(pHVal);
     
